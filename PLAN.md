@@ -137,7 +137,7 @@ webcatalog/
    - Extract table names, column definitions, indexes, foreign keys
    - Write tests for schema extraction utility
 
-⬜ **2.2 Document Database Schema**
+✅ **2.2 Document Database Schema**
    - Run schema extraction on sample WinCatalog database
    - Create `docs/DATABASE_SCHEMA.md` with findings
    - Document all relevant tables and columns:

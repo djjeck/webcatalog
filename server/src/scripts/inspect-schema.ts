@@ -6,8 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const DB_PATH =
-  process.env.DB_PATH ||
-  join(__dirname, '../../../WinCatalog-save.w3cat');
+  process.env.DB_PATH || join(__dirname, '../../../WinCatalog-save.w3cat');
 
 interface TableInfo {
   name: string;
@@ -90,7 +89,9 @@ export function inspectDatabase(dbPath: string = DB_PATH) {
     }
 
     // Get row count
-    const count = db.prepare(`SELECT COUNT(*) as count FROM ${table.name}`).get() as { count: number };
+    const count = db
+      .prepare(`SELECT COUNT(*) as count FROM ${table.name}`)
+      .get() as { count: number };
     console.log(`\nRow count: ${count.count.toLocaleString()}`);
 
     // Show sample row if available

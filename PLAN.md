@@ -181,7 +181,7 @@ webcatalog/
      - Mock filesystem for tests
    - Ensure >80% coverage
 
-⬜ **3.2 Search Query Builder** (`server/src/db/queries.ts`)
+✅ **3.2 Search Query Builder** (`server/src/db/queries.ts`)
    - Implement search query parser:
      - Parse search string into terms and phrases
      - Handle quoted phrases: `"exact phrase"`

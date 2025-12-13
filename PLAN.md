@@ -131,7 +131,7 @@ webcatalog/
 
 #### Tasks:
 
-⬜ **2.1 Create Schema Extraction Utility**
+✅ **2.1 Create Schema Extraction Utility**
    - Create `server/src/scripts/inspect-schema.ts`
    - Use better-sqlite3 to query SQLite metadata tables
    - Extract table names, column definitions, indexes, foreign keys

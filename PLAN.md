@@ -147,7 +147,7 @@ webcatalog/
      - Drive/volume information
      - Any metadata (tags, descriptions, thumbnails)
 
-⬜ **2.3 Create TypeScript Types**
+✅ **2.3 Create TypeScript Types**
    - Create `server/src/types/database.ts` with interfaces matching schema
    - Create `server/src/types/api.ts` for API request/response types
    - Write type tests to ensure correctness

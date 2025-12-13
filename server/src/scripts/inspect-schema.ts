@@ -110,7 +110,7 @@ export function inspectDatabase(dbPath: string = DB_PATH) {
   console.log('='.repeat(80));
 
   for (const table of tables) {
-    const fks = db.pragma(`foreign_key_list(${table.name})`);
+    const fks = db.pragma(`foreign_key_list(${table.name})`) as unknown[];
     if (fks.length > 0) {
       console.log(`\n${table.name}:`);
       console.log(JSON.stringify(fks, null, 2));

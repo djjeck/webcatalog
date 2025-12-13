@@ -167,7 +167,7 @@ webcatalog/
 
 #### Tasks:
 
-⬜ **3.1 Database Access Layer** (`server/src/db/`)
+✅ **3.1 Database Access Layer** (`server/src/db/`)
    - Create `database.ts`:
      - Initialize SQLite connection with better-sqlite3
      - Implement file modification time checking

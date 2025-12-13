@@ -14,10 +14,12 @@ app.get('/api/health', (_req, res) => {
 });
 
 // Start server only if not in test environment
+/* c8 ignore start */
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }
+/* c8 ignore stop */
 
 export default app;

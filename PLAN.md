@@ -108,21 +108,21 @@ webcatalog/
      - `typecheck` - Type check both packages
      - `format` - Format all code
 
-⬜ **1.6 Write Initial Tests**
+✅ **1.6 Write Initial Tests**
    - Backend: Create test for basic Express server health endpoint
    - Frontend: Create test for App component rendering
    - Run `npm run test:coverage` and ensure it passes
 
 #### Acceptance Criteria:
-- ⬜ Project structure matches defined layout
-- ⬜ All npm scripts run without errors
-- ⬜ `npm run lint` passes
-- ⬜ `npm run typecheck` passes
-- ⬜ `npm run format:check` passes
-- ⬜ `npm run test:coverage` passes with >80% coverage
-- ⬜ Git repository initialized with proper `.gitignore`
-- ⬜ Backend server starts and responds to health check
-- ⬜ Frontend dev server starts and renders basic UI
+- ✅ Project structure matches defined layout
+- ✅ All npm scripts run without errors
+- ✅ `npm run lint` passes
+- ✅ `npm run typecheck` passes
+- ✅ `npm run format:check` passes
+- ✅ `npm run test:coverage` passes with >80% coverage (100% achieved)
+- ✅ Git repository initialized with proper `.gitignore`
+- ✅ Backend server starts and responds to health check
+- ✅ Frontend dev server starts and renders basic UI
 
 ---
 

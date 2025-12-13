@@ -67,7 +67,7 @@ webcatalog/
    - Create `tsconfig.json` for backend
    - Setup basic Express server structure (`server/src/index.ts`)
 
-⬜ **1.3 Setup Frontend (client/)**
+✅ **1.3 Setup Frontend (client/)**
    - Initialize Vite React TypeScript project
    - Install development dependencies:
      - `vitest` - Testing framework

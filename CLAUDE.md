@@ -17,7 +17,7 @@ This project offers a simple web-based UI that reads the SQLite save-file DB, an
 ### Implementation workflow
 
 1. **Follow the plan:** All implementation work follows [PLAN.md](PLAN.md), which contains a detailed task breakdown organized into phases.
-2. **One task at a time:** Work on one task from PLAN.md at a time, completing it fully before moving to the next.
+2. **One sub-task at a time:** Work on ONE sub-task from PLAN.md at a time (e.g., 1.1, 1.2, etc.), completing it fully before moving to the next. Wait for author review between sub-tasks.
 3. **Mark progress:** Update PLAN.md to mark tasks as:
    - ⬜ Not started
    - 🔄 In progress
@@ -40,6 +40,6 @@ This project offers a simple web-based UI that reads the SQLite save-file DB, an
 
    Address any error messages and repeat the validation commands until all checks pass.
 
-5. **Review before proceeding:** After completing each task, pause for author review before starting the next task.
+5. **Review before proceeding:** After completing each sub-task, STOP and wait for author review before starting the next sub-task. Do not proceed to the next sub-task without explicit approval.
 6. **Adapt the plan:** If implementation reveals new requirements or better approaches, update PLAN.md accordingly before proceeding.
-7. **Commit-sized changes:** Each completed task should result in a self-contained, reviewable change with tests and documentation.
+7. **Small, reviewable changes:** Each completed sub-task should result in a small, self-contained, reviewable change with tests and documentation where applicable.

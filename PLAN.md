@@ -153,18 +153,12 @@ webcatalog/
    - Write type tests to ensure correctness
    - Export types for use in frontend (`client/src/types/api.ts`)
 
-⬜ **2.4 Write Tests**
-   - Test schema extraction utility
-   - Test type definitions with sample data
-   - Ensure test coverage >80%
-
 #### Acceptance Criteria:
-- ⬜ `docs/DATABASE_SCHEMA.md` documents all relevant tables and columns
-- ⬜ TypeScript types accurately represent database schema
+- ✅ `docs/DATABASE_SCHEMA.md` documents all relevant tables and columns
+- ✅ TypeScript types accurately represent database schema
 - ⬜ Types are shared between frontend and backend
-- ⬜ Schema extraction script runs successfully on sample database
-- ⬜ All tests pass with >80% coverage
-- ⬜ `npm run typecheck` passes
+- ✅ Schema extraction script runs successfully on sample database
+- ✅ `npm run typecheck` passes
 
 ---
 

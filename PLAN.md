@@ -46,12 +46,12 @@ webcatalog/
 
 #### Tasks:
 
-⬜ **1.1 Initialize Project Structure**
+✅ **1.1 Initialize Project Structure**
    - Create root directory structure
    - Initialize Git repository
    - Create `.gitignore` for Node.js/TypeScript projects
 
-⬜ **1.2 Setup Backend (server/)**
+✅ **1.2 Setup Backend (server/)**
    - Initialize npm project
    - Install production dependencies:
      - `express` - Web framework

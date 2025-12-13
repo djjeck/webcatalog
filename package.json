@@ -1,0 +1,27 @@
+{
+  "name": "webcatalog",
+  "version": "0.0.1",
+  "description": "Web UI for WinCatalog database search",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n client,server -c cyan,green \"npm run dev --workspace=client\" \"npm run dev --workspace=server\"",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "test:coverage": "npm run test:coverage --workspaces",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "format": "npm run format --workspaces",
+    "format:check": "npm run format:check --workspaces"
+  },
+  "keywords": ["wincatalog", "search", "sqlite", "web"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

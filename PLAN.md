@@ -77,7 +77,7 @@ webcatalog/
    - Configure Vitest in `vite.config.ts`
    - Setup basic React app structure
 
-⬜ **1.4 Configure Testing & Quality Tools**
+✅ **1.4 Configure Testing & Quality Tools**
    - Setup coverage thresholds in both `package.json` files:
      - Lines: 80%
      - Functions: 80%
@@ -97,7 +97,7 @@ webcatalog/
      - `format` - Format code
      - `format:check` - Check formatting
 
-⬜ **1.5 Setup Root Package Scripts**
+✅ **1.5 Setup Root Package Scripts**
    - Create root `package.json` with workspace configuration
    - Install `concurrently` for running multiple scripts
    - Add root scripts:

@@ -198,7 +198,7 @@ webcatalog/
      - Edge cases
    - Ensure >80% coverage
 
-⬜ **3.3 Search Service** (`server/src/services/search.ts`)
+✅ **3.3 Search Service** (`server/src/services/search.ts`)
    - Implement search logic:
      - Use query builder to construct SQL
      - Execute search against database

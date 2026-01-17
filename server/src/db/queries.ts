@@ -27,10 +27,10 @@ export function parseSearchQuery(query: string): SearchTerm[] {
   while (split.length > 0) {
     const portion = split.shift()!.trim();
     // If we are inside quotes, don't split around spaces
-    const subPortions = isPhrase ? [portion] : portion.split(" ");
+    const subPortions = isPhrase ? [portion] : portion.split(' ');
     for (const subPortion of subPortions) {
       if (subPortion !== '') {
-        terms.push({value: subPortion, isPhrase});
+        terms.push({ value: subPortion, isPhrase });
       }
     }
     // Since we split around quotes, we alternate between in-quote mode and regular mode

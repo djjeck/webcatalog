@@ -5,6 +5,7 @@
 
 import { getDatabase } from '../db/database.js';
 import { buildSearchQuery } from '../db/queries.js';
+import { checkAndReloadIfChanged } from './refresh.js';
 import type { SearchResultItem, SearchResponse } from '../types/api.js';
 import { ItemType } from '../types/database.js';
 
@@ -120,13 +121,11 @@ export async function executeSearch(
   const effectiveLimit = Math.min(Math.max(1, limit), MAX_LIMIT);
   const effectiveOffset = Math.max(0, offset);
 
+  // Check if database needs reloading (centralized in refresh service)
+  await checkAndReloadIfChanged();
+
   // Get database instance
-  const dbManager = getDatabase();
-
-  // Check if database needs reloading
-  await dbManager.reloadIfChanged();
-
-  const db = dbManager.getDb();
+  const db = getDatabase().getDb();
 
   // Build search query
   const { sql, params } = buildSearchQuery(query);

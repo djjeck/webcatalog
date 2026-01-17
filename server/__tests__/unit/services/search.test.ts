@@ -19,8 +19,14 @@ vi.mock('../../../src/db/queries.js', () => ({
   buildSearchQuery: vi.fn(),
 }));
 
+// Mock the refresh service
+vi.mock('../../../src/services/refresh.js', () => ({
+  checkAndReloadIfChanged: vi.fn(),
+}));
+
 import { getDatabase } from '../../../src/db/database.js';
 import { buildSearchQuery } from '../../../src/db/queries.js';
+import { checkAndReloadIfChanged } from '../../../src/services/refresh.js';
 
 describe('getItemType', () => {
   it('should return "volume" for VOLUME type', () => {
@@ -244,7 +250,6 @@ describe('executeSearch', () => {
   };
   let mockDbManager: {
     getDb: ReturnType<typeof vi.fn>;
-    reloadIfChanged: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -260,10 +265,10 @@ describe('executeSearch', () => {
 
     mockDbManager = {
       getDb: vi.fn().mockReturnValue(mockDb),
-      reloadIfChanged: vi.fn().mockResolvedValue(false),
     };
 
     vi.mocked(getDatabase).mockReturnValue(mockDbManager as any);
+    vi.mocked(checkAndReloadIfChanged).mockResolvedValue(false);
     vi.mocked(buildSearchQuery).mockReturnValue({
       sql: 'SELECT * FROM items WHERE name LIKE ?',
       params: ['%test%'],
@@ -306,7 +311,7 @@ describe('executeSearch', () => {
 
     await executeSearch('test');
 
-    expect(mockDbManager.reloadIfChanged).toHaveBeenCalled();
+    expect(checkAndReloadIfChanged).toHaveBeenCalled();
   });
 
   it('should use default limit when not specified', async () => {

@@ -212,7 +212,7 @@ webcatalog/
      - Mock database for tests
    - Ensure >80% coverage
 
-⬜ **3.4 Database Refresh Service** (`server/src/services/refresh.ts`)
+✅ **3.4 Database Refresh Service** (`server/src/services/refresh.ts`)
    - Implement on-demand refresh:
      - Check file modification time before each search
      - Reload database if changed

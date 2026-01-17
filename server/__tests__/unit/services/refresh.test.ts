@@ -1,0 +1,384 @@
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+  type MockInstance,
+} from 'vitest';
+import cron from 'node-cron';
+import {
+  checkAndReloadIfChanged,
+  forceReload,
+  getLastReloadTime,
+  scheduleNightlyRefresh,
+  stopScheduledRefresh,
+  isScheduledRefreshActive,
+  resetRefreshState,
+} from '../../../src/services/refresh.js';
+
+// Mock the database module
+vi.mock('../../../src/db/database.js', () => ({
+  getDatabase: vi.fn(),
+}));
+
+// Mock node-cron
+vi.mock('node-cron', () => ({
+  default: {
+    schedule: vi.fn(),
+  },
+}));
+
+import { getDatabase } from '../../../src/db/database.js';
+
+describe('Database Refresh Service', () => {
+  let mockDbManager: {
+    reloadIfChanged: ReturnType<typeof vi.fn>;
+    reload: ReturnType<typeof vi.fn>;
+  };
+  let consoleLogSpy: MockInstance;
+  let consoleErrorSpy: MockInstance;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetRefreshState();
+
+    mockDbManager = {
+      reloadIfChanged: vi.fn(),
+      reload: vi.fn(),
+    };
+
+    vi.mocked(getDatabase).mockReturnValue(mockDbManager as any);
+
+    // Spy on console methods
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    resetRefreshState();
+    consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+  });
+
+  describe('checkAndReloadIfChanged', () => {
+    it('should return true when database was reloaded', async () => {
+      mockDbManager.reloadIfChanged.mockResolvedValue(true);
+
+      const result = await checkAndReloadIfChanged();
+
+      expect(result).toBe(true);
+      expect(mockDbManager.reloadIfChanged).toHaveBeenCalled();
+    });
+
+    it('should return false when database was not reloaded', async () => {
+      mockDbManager.reloadIfChanged.mockResolvedValue(false);
+
+      const result = await checkAndReloadIfChanged();
+
+      expect(result).toBe(false);
+    });
+
+    it('should update lastReloadTime when reloaded', async () => {
+      mockDbManager.reloadIfChanged.mockResolvedValue(true);
+
+      const before = new Date();
+      await checkAndReloadIfChanged();
+      const after = new Date();
+
+      const lastReload = getLastReloadTime();
+      expect(lastReload).not.toBeNull();
+      expect(lastReload!.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(lastReload!.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+
+    it('should not update lastReloadTime when not reloaded', async () => {
+      mockDbManager.reloadIfChanged.mockResolvedValue(false);
+
+      await checkAndReloadIfChanged();
+
+      expect(getLastReloadTime()).toBeNull();
+    });
+
+    it('should log when database is reloaded', async () => {
+      mockDbManager.reloadIfChanged.mockResolvedValue(true);
+
+      await checkAndReloadIfChanged();
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Database reloaded at')
+      );
+    });
+  });
+
+  describe('forceReload', () => {
+    it('should call database reload', async () => {
+      mockDbManager.reload.mockResolvedValue(undefined);
+
+      await forceReload();
+
+      expect(mockDbManager.reload).toHaveBeenCalled();
+    });
+
+    it('should update lastReloadTime', async () => {
+      mockDbManager.reload.mockResolvedValue(undefined);
+
+      const before = new Date();
+      await forceReload();
+      const after = new Date();
+
+      const lastReload = getLastReloadTime();
+      expect(lastReload).not.toBeNull();
+      expect(lastReload!.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(lastReload!.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+
+    it('should log force reload message', async () => {
+      mockDbManager.reload.mockResolvedValue(undefined);
+
+      await forceReload();
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Database force reloaded at')
+      );
+    });
+  });
+
+  describe('getLastReloadTime', () => {
+    it('should return null when no reload has occurred', () => {
+      expect(getLastReloadTime()).toBeNull();
+    });
+
+    it('should return the last reload time after reload', async () => {
+      mockDbManager.reload.mockResolvedValue(undefined);
+
+      await forceReload();
+
+      expect(getLastReloadTime()).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('scheduleNightlyRefresh', () => {
+    let mockScheduledTask: {
+      stop: ReturnType<typeof vi.fn>;
+    };
+
+    beforeEach(() => {
+      mockScheduledTask = {
+        stop: vi.fn(),
+      };
+      vi.mocked(cron.schedule).mockReturnValue(mockScheduledTask as any);
+    });
+
+    it('should schedule task at default midnight hour', () => {
+      scheduleNightlyRefresh();
+
+      expect(cron.schedule).toHaveBeenCalledWith(
+        '0 0 * * *',
+        expect.any(Function)
+      );
+    });
+
+    it('should schedule task at specified hour', () => {
+      scheduleNightlyRefresh(3);
+
+      expect(cron.schedule).toHaveBeenCalledWith(
+        '0 3 * * *',
+        expect.any(Function)
+      );
+    });
+
+    it('should clamp hour to valid range (0-23)', () => {
+      scheduleNightlyRefresh(25);
+
+      expect(cron.schedule).toHaveBeenCalledWith(
+        '0 23 * * *',
+        expect.any(Function)
+      );
+    });
+
+    it('should clamp negative hour to 0', () => {
+      scheduleNightlyRefresh(-5);
+
+      expect(cron.schedule).toHaveBeenCalledWith(
+        '0 0 * * *',
+        expect.any(Function)
+      );
+    });
+
+    it('should floor decimal hours', () => {
+      scheduleNightlyRefresh(5.7);
+
+      expect(cron.schedule).toHaveBeenCalledWith(
+        '0 5 * * *',
+        expect.any(Function)
+      );
+    });
+
+    it('should stop existing task before scheduling new one', () => {
+      scheduleNightlyRefresh(1);
+      scheduleNightlyRefresh(2);
+
+      expect(mockScheduledTask.stop).toHaveBeenCalled();
+    });
+
+    it('should log scheduled refresh info', () => {
+      scheduleNightlyRefresh(3);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Scheduled nightly refresh at 3:00')
+      );
+    });
+
+    it('should mark refresh as active after scheduling', () => {
+      scheduleNightlyRefresh();
+
+      expect(isScheduledRefreshActive()).toBe(true);
+    });
+
+    describe('scheduled callback', () => {
+      it('should call forceReload when triggered', async () => {
+        mockDbManager.reload.mockResolvedValue(undefined);
+        let capturedCallback: () => Promise<void>;
+
+        vi.mocked(cron.schedule).mockImplementation(
+          (_expr: string, callback: () => Promise<void>) => {
+            capturedCallback = callback;
+            return mockScheduledTask as any;
+          }
+        );
+
+        scheduleNightlyRefresh(0);
+        await capturedCallback!();
+
+        expect(mockDbManager.reload).toHaveBeenCalled();
+      });
+
+      it('should handle errors during scheduled refresh', async () => {
+        const testError = new Error('Reload failed');
+        mockDbManager.reload.mockRejectedValue(testError);
+        let capturedCallback: () => Promise<void>;
+
+        vi.mocked(cron.schedule).mockImplementation(
+          (_expr: string, callback: () => Promise<void>) => {
+            capturedCallback = callback;
+            return mockScheduledTask as any;
+          }
+        );
+
+        scheduleNightlyRefresh(0);
+        await capturedCallback!();
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Error during scheduled refresh:',
+          testError
+        );
+      });
+    });
+  });
+
+  describe('stopScheduledRefresh', () => {
+    let mockScheduledTask: {
+      stop: ReturnType<typeof vi.fn>;
+    };
+
+    beforeEach(() => {
+      mockScheduledTask = {
+        stop: vi.fn(),
+      };
+      vi.mocked(cron.schedule).mockReturnValue(mockScheduledTask as any);
+    });
+
+    it('should stop active scheduled task', () => {
+      scheduleNightlyRefresh();
+      stopScheduledRefresh();
+
+      expect(mockScheduledTask.stop).toHaveBeenCalled();
+    });
+
+    it('should mark refresh as inactive after stopping', () => {
+      scheduleNightlyRefresh();
+      stopScheduledRefresh();
+
+      expect(isScheduledRefreshActive()).toBe(false);
+    });
+
+    it('should log when stopping', () => {
+      scheduleNightlyRefresh();
+      stopScheduledRefresh();
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('Scheduled refresh stopped');
+    });
+
+    it('should not throw when no task is scheduled', () => {
+      expect(() => stopScheduledRefresh()).not.toThrow();
+    });
+  });
+
+  describe('isScheduledRefreshActive', () => {
+    let mockScheduledTask: {
+      stop: ReturnType<typeof vi.fn>;
+    };
+
+    beforeEach(() => {
+      mockScheduledTask = {
+        stop: vi.fn(),
+      };
+      vi.mocked(cron.schedule).mockReturnValue(mockScheduledTask as any);
+    });
+
+    it('should return false when no task is scheduled', () => {
+      expect(isScheduledRefreshActive()).toBe(false);
+    });
+
+    it('should return true when task is scheduled', () => {
+      scheduleNightlyRefresh();
+
+      expect(isScheduledRefreshActive()).toBe(true);
+    });
+
+    it('should return false after stopping', () => {
+      scheduleNightlyRefresh();
+      stopScheduledRefresh();
+
+      expect(isScheduledRefreshActive()).toBe(false);
+    });
+  });
+
+  describe('resetRefreshState', () => {
+    let mockScheduledTask: {
+      stop: ReturnType<typeof vi.fn>;
+    };
+
+    beforeEach(() => {
+      mockScheduledTask = {
+        stop: vi.fn(),
+      };
+      vi.mocked(cron.schedule).mockReturnValue(mockScheduledTask as any);
+    });
+
+    it('should stop scheduled task', () => {
+      scheduleNightlyRefresh();
+      resetRefreshState();
+
+      expect(mockScheduledTask.stop).toHaveBeenCalled();
+    });
+
+    it('should reset lastReloadTime to null', async () => {
+      mockDbManager.reload.mockResolvedValue(undefined);
+      await forceReload();
+
+      resetRefreshState();
+
+      expect(getLastReloadTime()).toBeNull();
+    });
+
+    it('should mark refresh as inactive', () => {
+      scheduleNightlyRefresh();
+      resetRefreshState();
+
+      expect(isScheduledRefreshActive()).toBe(false);
+    });
+  });
+});

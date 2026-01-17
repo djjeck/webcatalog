@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import apiRoutes from './routes/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,10 +9,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// API routes
+app.use('/api', apiRoutes);
 
 // Start server only if not in test environment
 /* c8 ignore start */

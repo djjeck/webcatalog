@@ -226,7 +226,7 @@ webcatalog/
      - Test error handling
    - Ensure >80% coverage
 
-⬜ **3.5 API Routes** (`server/src/routes/`)
+✅ **3.5 API Routes** (`server/src/routes/`)
    - Implement endpoints:
      - `GET /api/search?q=<query>` - Search endpoint
      - `GET /api/health` - Health check endpoint

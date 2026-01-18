@@ -1,3 +1,6 @@
+// Load environment variables from .env file (no-op if file doesn't exist)
+import 'dotenv/config';
+
 import express from 'express';
 import cors from 'cors';
 import apiRoutes from './routes/index.js';

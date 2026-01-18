@@ -7,6 +7,7 @@ import apiRoutes from './routes/index.js';
 import { getConfig, validateConfig } from './config.js';
 import { initDatabase } from './db/database.js';
 import { scheduleNightlyRefresh } from './services/refresh.js';
+import { errorHandler, notFoundHandler } from './middleware/errors.js';
 
 const app = express();
 const config = getConfig();
@@ -17,6 +18,10 @@ app.use(express.json());
 
 // API routes
 app.use('/api', apiRoutes);
+
+// Error handling (must be after routes)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 /**
  * Initialize the application

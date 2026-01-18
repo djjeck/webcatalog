@@ -161,6 +161,6 @@ describe('GET /api/db-status', () => {
 
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty('error', 'Internal Server Error');
-    expect(response.body.message).toContain('Failed to retrieve database status');
+    expect(response.body.message).toContain('An unexpected error occurred');
   });
 });

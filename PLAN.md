@@ -248,23 +248,23 @@ webcatalog/
    - Write tests for config module
    - Ensure >80% coverage
 
-⬜ **3.7 Error Handling Middleware**
+✅ **3.7 Error Handling Middleware**
    - Create error handling middleware
    - Handle database errors gracefully
    - Write tests for error scenarios
    - Ensure >80% coverage
 
 #### Acceptance Criteria:
-- ⬜ All backend modules have >80% test coverage
-- ⬜ Search query parser handles all specified cases
-- ⬜ API endpoints return correct responses
-- ⬜ Database reload works on file modification
-- ⬜ Nightly refresh is scheduled correctly
-- ⬜ All tests pass: `npm run test:coverage`
-- ⬜ No type errors: `npm run typecheck`
-- ⬜ No lint errors: `npm run lint`
-- ⬜ Backend server runs without errors
-- ⬜ Manual testing shows search returns expected results
+- ✅ All backend modules have >80% test coverage
+- ✅ Search query parser handles all specified cases
+- ✅ API endpoints return correct responses
+- ✅ Database reload works on file modification
+- ✅ Nightly refresh is scheduled correctly
+- ✅ All tests pass: `npm run test:coverage`
+- ✅ No type errors: `npm run typecheck`
+- ✅ No lint errors: `npm run lint`
+- ✅ Backend server runs without errors
+- ✅ Manual testing shows search returns expected results
 
 ---
 

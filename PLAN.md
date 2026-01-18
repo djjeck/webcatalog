@@ -238,7 +238,7 @@ webcatalog/
      - Test search with mock database
    - Ensure >80% coverage
 
-⬜ **3.6 Configuration & Environment**
+✅ **3.6 Configuration & Environment**
    - Create `server/src/config.ts` for environment variables:
      - `DB_PATH` - Path to WinCatalog SQLite file
      - `PORT` - Server port (default: 3000)

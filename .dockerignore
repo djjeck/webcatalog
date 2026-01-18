@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+CLAUDE.md
+PLAN.md
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Node.js
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs (we rebuild in Docker)
+server/dist
+client/dist
+client/build
+
+# Test files
+**/__tests__
+**/*.test.ts
+**/*.spec.ts
+coverage
+.nyc_output
+
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+server/.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+tmp/
+temp/
+
+# Docker files (not needed inside container)
+Dockerfile
+docker-compose*.yml
+.dockerignore

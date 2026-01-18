@@ -28,17 +28,47 @@ WinCatalog is a Windows utility that scans external drives and offers a search b
 
 ## Quick Start
 
-### Using Docker (Recommended)
+### Using Docker Compose (Recommended)
+
+1. Create a `docker-compose.yml` file:
+
+```yaml
+# docker-compose.yml
+services:
+  webcatalog:
+    image: webcatalog:latest
+    # For local builds, replace the line above with:
+    # build: .
+    container_name: webcatalog
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount your WinCatalog database file (read-only)
+      # Replace with your actual database path
+      - /path/to/your/catalog.w3cat:/data/catalog.w3cat:ro
+    environment:
+      - NIGHTLY_REFRESH_HOUR=0
+      - PORT=3000
+    restart: unless-stopped
+```
+
+2. Start the service:
+```bash
+docker compose up -d
+```
+
+3. Open http://localhost:3000
+
+### Using Docker Run
 
 ```bash
 docker run -d \
   --name webcatalog \
   -p 3000:3000 \
   -v /path/to/your/catalog.w3cat:/data/catalog.w3cat:ro \
+  --restart unless-stopped \
   webcatalog:latest
 ```
-
-Then open http://localhost:3000
 
 ### Local Development
 
@@ -87,7 +117,7 @@ webcatalog/
 │   │   └── scripts/      # Utility scripts
 │   └── __tests__/         # Backend tests
 ├── docs/                   # Documentation
-└── docker/                 # Docker configuration
+└── Dockerfile              # Docker image build
 ```
 
 ## Search Syntax
@@ -107,12 +137,12 @@ All searches are case-insensitive and match partial words.
 
 ## Environment Variables
 
-| Variable               | Description                          | Default            |
-| ---------------------- | ------------------------------------ | ------------------ |
+| Variable               | Description                          | Default               |
+| ---------------------- | ------------------------------------ | --------------------- |
+| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload  | `0` (midnight)        |
+| `PORT`                 | Server port                          | `3000`                |
+| `NODE_ENV`             | Environment (development/production) | `production`          |
 | `DB_PATH`              | Path to WinCatalog `.w3cat` file     | `/data/catalog.w3cat` |
-| `PORT`                 | Server port                          | `3000`             |
-| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload  | `0` (midnight)     |
-| `NODE_ENV`             | Environment (development/production) | `production`       |
 
 ## Database Schema
 
@@ -175,23 +205,28 @@ All checks run automatically and must pass before committing.
 
 ## Deployment
 
-### Docker
+### Building the Docker Image
 
-1. **Build image**
-   ```bash
-   docker build -t webcatalog -f docker/Dockerfile .
-   ```
+```bash
+# Build locally
+docker build -t webcatalog .
 
-2. **Run container**
-   ```bash
-   docker run -d \
-     --name webcatalog \
-     -p 3000:3000 \
-     -v /path/to/catalog.w3cat:/data/catalog.w3cat:ro \
-     -e NIGHTLY_REFRESH_HOUR=2 \
-     --restart unless-stopped \
-     webcatalog:latest
-   ```
+# Or use docker compose
+docker compose build
+```
+
+### Managing the Container
+
+```bash
+# View logs
+docker compose logs -f
+
+# Stop the service
+docker compose down
+
+# Restart the service
+docker compose restart
+```
 
 ### Synology NAS
 
@@ -206,30 +241,6 @@ All checks run automatically and must pass before committing.
 6. Start the container
 
 The web interface will be available at `http://your-nas-ip:3000`
-
-### Docker Compose
-
-```yaml
-version: '3.8'
-
-services:
-  webcatalog:
-    image: webcatalog:latest
-    container_name: webcatalog
-    ports:
-      - "3000:3000"
-    volumes:
-      - /path/to/your/catalog.w3cat:/data/catalog.w3cat:ro
-    environment:
-      - DB_PATH=/data/catalog.w3cat
-      - NIGHTLY_REFRESH_HOUR=2
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-```
 
 ## Architecture
 

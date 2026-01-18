@@ -254,7 +254,7 @@ webcatalog/
    - Write tests for error scenarios
    - Ensure >80% coverage
 
-⬜ **3.8 Docker Setup (API-only)**
+✅ **3.8 Docker Setup (API-only)**
    - Create `Dockerfile` in project root:
      - Use Node.js base image
      - Copy server files and install dependencies

@@ -31,14 +31,19 @@ This project offers a simple web-based UI that reads the SQLite save-file DB, an
    # Install/update dependencies if package.json changed
    npm install
 
-   # Validate code quality
-   npm run lint && npm run typecheck && npm run format
+   # Validate code quality (these must all pass for CI to succeed)
+   npm run lint           # ESLint checks
+   npm run typecheck      # TypeScript type checking
+   npm run format         # Auto-format code with Prettier
+   npm run format:check   # Verify formatting matches (CI uses this)
 
    # Run tests and validate coverage thresholds
    npm run test:coverage
    ```
 
    Address any error messages and repeat the validation commands until all checks pass.
+
+   **Note:** The GitHub Actions CI workflow runs these same checks. If they pass locally, they should pass in CI.
 
 5. **Review before proceeding:** After completing each sub-task, STOP and wait for author review before starting the next sub-task. Do not proceed to the next sub-task without explicit approval.
 6. **Adapt the plan:** If implementation reveals new requirements or better approaches, update PLAN.md accordingly before proceeding.

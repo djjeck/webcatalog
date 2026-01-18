@@ -254,6 +254,36 @@ webcatalog/
    - Write tests for error scenarios
    - Ensure >80% coverage
 
+⬜ **3.8 Docker Setup (API-only)**
+   - Create `Dockerfile` in project root:
+     - Use Node.js base image
+     - Copy server files and install dependencies
+     - Build TypeScript to JavaScript
+     - Use production dependencies only in final stage
+     - Expose port 3000
+     - Set non-root user for security
+   - Create `docker-compose.yml`:
+     - Volume mount for database file (read-only)
+     - Environment variable configuration
+     - Port mapping and health check
+   - Create `.dockerignore` file
+   - Test Docker build and run locally
+   - Document Docker commands in README
+
+⬜ **3.9 GitHub Actions CI**
+   - Create `.github/workflows/ci.yml`:
+     - Trigger on push to main and pull requests
+     - Run on ubuntu-latest
+     - Setup Node.js with caching
+     - Install dependencies
+     - Run lint check (`npm run lint`)
+     - Run format check (`npm run format:check`)
+     - Run TypeScript check (`npm run typecheck`)
+     - Run tests with coverage (`npm run test:coverage`)
+     - Build Docker image (sanity check, don't push)
+   - Ensure workflow fails fast on any error
+   - Add status badge to README
+
 #### Acceptance Criteria:
 - ✅ All backend modules have >80% test coverage
 - ✅ Search query parser handles all specified cases
@@ -265,6 +295,9 @@ webcatalog/
 - ✅ No lint errors: `npm run lint`
 - ✅ Backend server runs without errors
 - ✅ Manual testing shows search returns expected results
+- ⬜ Docker image builds and runs successfully
+- ⬜ GitHub Actions CI workflow passes
+- ⬜ Docker container serves API endpoints correctly
 
 ---
 
@@ -373,7 +406,15 @@ webcatalog/
    - Write tests for static file serving
    - Ensure >80% coverage
 
-⬜ **5.2 Integration Testing**
+⬜ **5.2 Update Dockerfile for Full App**
+   - Update `Dockerfile` to build frontend:
+     - Add build stage for client (npm run build)
+     - Copy built frontend assets to server's public directory
+     - Ensure static files are served correctly
+   - Test Docker build with full app
+   - Test in Docker container locally
+
+⬜ **5.3 Integration Testing**
    - Test full search flow from UI to database
    - Test error scenarios:
      - Missing database file
@@ -383,7 +424,7 @@ webcatalog/
    - Test database reload on file change
    - Manual testing with real WinCatalog database
 
-⬜ **5.3 Performance Testing**
+⬜ **5.4 Performance Testing**
    - Test search performance with large databases
    - Test with large result sets (1000+ results)
    - Add result limiting if needed
@@ -396,62 +437,49 @@ webcatalog/
 - ⬜ Database reload works when file changes
 - ⬜ Performance is acceptable (<1s for most searches)
 - ⬜ All tests pass with >80% coverage
+- ⬜ Docker image serves complete app (API + UI)
 
 ---
 
-### Phase 6: Docker Setup
-**Goal**: Containerize the application for deployment
+### Phase 6: Multi-Architecture Docker & Production Readiness
+**Goal**: Prepare Docker image for production deployment on various architectures
 
 #### Tasks:
 
-⬜ **6.1 Multi-stage Dockerfile** (`docker/Dockerfile`)
-   - Stage 1: Build frontend
-     - Use Node.js base image
-     - Copy client files
-     - Run `npm install` and `npm run build`
-   - Stage 2: Build backend
-     - Copy server files
-     - Run `npm install` and `npm run build`
-   - Stage 3: Production image
-     - Use Node.js Alpine base (lightweight)
-     - Copy built frontend to serve statically
-     - Copy built backend
-     - Install only production dependencies
-     - Expose port 3000
-     - Set non-root user for security
-     - Set entrypoint to start server
-
-⬜ **6.2 Docker Compose** (`docker-compose.yml`)
-   - Define service configuration
-   - Volume mount for database file (read-only)
-   - Environment variable configuration
-   - Port mapping (3000:3000)
-   - Restart policy (unless-stopped)
-   - Health check configuration
-
-⬜ **6.3 Multi-Architecture Support**
+⬜ **6.1 Multi-Architecture Support**
    - Configure Docker buildx for multi-arch builds
-   - Test build for both AMD64 and ARM64
-   - Document build commands
+   - Build for AMD64 (Intel/AMD) and ARM64 (Apple Silicon, Synology)
+   - Test builds on both architectures
+   - Document multi-arch build commands
 
-⬜ **6.4 Docker Testing**
-   - Build Docker image
-   - Run container with sample database
-   - Test all functionality in container
-   - Test volume mounts
-   - Test environment variables
-   - Test Synology NAS compatibility (if available)
+⬜ **6.2 Production Dockerfile Optimization**
+   - Optimize image size (target <500MB)
+   - Use Node.js Alpine base for smaller footprint
+   - Multi-stage build to exclude dev dependencies
+   - Security hardening:
+     - Run as non-root user
+     - Remove unnecessary packages
+     - Set read-only filesystem where possible
+
+⬜ **6.3 Synology NAS Testing**
+   - Test Docker image on Synology NAS (if available)
+   - Verify volume mounts work correctly
+   - Test Container Manager configuration
+   - Document any Synology-specific requirements
+
+⬜ **6.4 Docker Compose Enhancements**
+   - Add restart policy (unless-stopped)
+   - Add resource limits (memory, CPU)
+   - Add logging configuration
+   - Add network configuration for reverse proxy
 
 #### Acceptance Criteria:
-- ⬜ Docker image builds successfully
-- ⬜ Container runs and serves application correctly
-- ⬜ Database volume mount works (read-only)
-- ⬜ Environment variables configure correctly
-- ⬜ Health check endpoint works
 - ⬜ Multi-architecture builds work (AMD64 and ARM64)
 - ⬜ Image size is reasonable (<500MB)
+- ⬜ Container runs as non-root user
 - ⬜ Container restarts on failure
 - ⬜ All features work in containerized environment
+- ⬜ Synology NAS deployment works (if tested)
 
 ---
 
@@ -502,19 +530,31 @@ webcatalog/
    - Contributing guide
    - Release process
 
-⬜ **7.6 Build & Publish**
-   - Tag version (v1.0.0)
-   - Build final Docker image
-   - Test on target environment
-   - Optional: Push to Docker Hub
-   - Create GitHub release
+⬜ **7.6 GitHub Actions Docker Publish Workflow**
+   - Create `.github/workflows/publish.yml`:
+     - Trigger on semantic version tags (v*.*.*)
+     - Build multi-architecture Docker image (AMD64, ARM64)
+     - Push to Docker Hub
+     - Tag with version number and `latest`
+   - Configure Docker Hub credentials as GitHub secrets:
+     - `DOCKERHUB_USERNAME`
+     - `DOCKERHUB_TOKEN`
+   - Document release process in developer guide
+
+⬜ **7.7 First Release**
+   - Final testing on all target environments
+   - Tag version v1.0.0
+   - Verify publish workflow runs successfully
+   - Verify Docker Hub image is accessible
+   - Create GitHub release with changelog
 
 #### Acceptance Criteria:
 - ⬜ README is comprehensive and clear
 - ⬜ All deployment scenarios are documented
 - ⬜ User guide covers all features
 - ⬜ Developer guide enables contribution
-- ⬜ Docker image is published (if applicable)
+- ⬜ Docker publish workflow works on version tags
+- ⬜ Docker Hub image is published and pullable
 - ⬜ Version is tagged in Git
 - ⬜ Documentation has no broken links
 - ⬜ Screenshots are included where helpful

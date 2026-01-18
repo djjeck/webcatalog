@@ -34,7 +34,7 @@ WinCatalog is a Windows utility that scans external drives and offers a search b
 docker run -d \
   --name webcatalog \
   -p 3000:3000 \
-  -v /path/to/your/catalog.w3cat:/data/catalog.db:ro \
+  -v /path/to/your/catalog.w3cat:/data/catalog.w3cat:ro \
   webcatalog:latest
 ```
 
@@ -109,7 +109,7 @@ All searches are case-insensitive and match partial words.
 
 | Variable               | Description                          | Default            |
 | ---------------------- | ------------------------------------ | ------------------ |
-| `DB_PATH`              | Path to WinCatalog `.w3cat` file     | `/data/catalog.db` |
+| `DB_PATH`              | Path to WinCatalog `.w3cat` file     | `/data/catalog.w3cat` |
 | `PORT`                 | Server port                          | `3000`             |
 | `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload  | `0` (midnight)     |
 | `NODE_ENV`             | Environment (development/production) | `production`       |
@@ -187,7 +187,7 @@ All checks run automatically and must pass before committing.
    docker run -d \
      --name webcatalog \
      -p 3000:3000 \
-     -v /path/to/catalog.w3cat:/data/catalog.db:ro \
+     -v /path/to/catalog.w3cat:/data/catalog.w3cat:ro \
      -e NIGHTLY_REFRESH_HOUR=2 \
      --restart unless-stopped \
      webcatalog:latest
@@ -201,7 +201,7 @@ All checks run automatically and must pass before committing.
 4. Go to **Image** and launch the container
 5. Configure:
    - **Port**: Map local port 3000 to container port 3000
-   - **Volume**: Mount your `.w3cat` file to `/data/catalog.db` (read-only)
+   - **Volume**: Mount your `.w3cat` file to `/data/catalog.w3cat` (read-only)
    - **Environment**: Set `DB_PATH` if needed
 6. Start the container
 
@@ -219,9 +219,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /path/to/your/catalog.w3cat:/data/catalog.db:ro
+      - /path/to/your/catalog.w3cat:/data/catalog.w3cat:ro
     environment:
-      - DB_PATH=/data/catalog.db
+      - DB_PATH=/data/catalog.w3cat
       - NIGHTLY_REFRESH_HOUR=2
     restart: unless-stopped
     healthcheck:

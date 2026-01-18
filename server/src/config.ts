@@ -27,7 +27,7 @@ export interface Config {
  * Default configuration values
  */
 const defaults = {
-  dbPath: '/data/catalog.db',
+  dbPath: '/data/catalog.w3cat',
   port: 3000,
   nightlyRefreshHour: 0,
   nodeEnv: 'development',

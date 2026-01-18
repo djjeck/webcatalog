@@ -32,18 +32,18 @@ describe('Config Module', () => {
 
       const config = loadConfig();
 
-      expect(config.dbPath).toBe('/data/catalog.db');
+      expect(config.dbPath).toBe('/data/catalog.w3cat');
       expect(config.port).toBe(3000);
       expect(config.nightlyRefreshHour).toBe(0);
       expect(config.nodeEnv).toBe('development');
     });
 
     it('should read DB_PATH from environment', () => {
-      process.env.DB_PATH = '/custom/path/catalog.db';
+      process.env.DB_PATH = '/custom/path/catalog.w3cat';
 
       const config = loadConfig();
 
-      expect(config.dbPath).toBe('/custom/path/catalog.db');
+      expect(config.dbPath).toBe('/custom/path/catalog.w3cat');
     });
 
     it('should read PORT from environment', () => {
@@ -162,7 +162,7 @@ describe('Config Module', () => {
   describe('validateConfig', () => {
     it('should return empty array for valid development config', () => {
       const config: Config = {
-        dbPath: '/custom/path.db',
+        dbPath: '/custom/path.w3cat',
         port: 3000,
         nightlyRefreshHour: 0,
         nodeEnv: 'development',
@@ -178,7 +178,7 @@ describe('Config Module', () => {
 
     it('should warn when using default DB_PATH in production', () => {
       const config: Config = {
-        dbPath: '/data/catalog.db',
+        dbPath: '/data/catalog.w3cat',
         port: 3000,
         nightlyRefreshHour: 0,
         nodeEnv: 'production',
@@ -195,7 +195,7 @@ describe('Config Module', () => {
 
     it('should not warn about default DB_PATH in development', () => {
       const config: Config = {
-        dbPath: '/data/catalog.db',
+        dbPath: '/data/catalog.w3cat',
         port: 3000,
         nightlyRefreshHour: 0,
         nodeEnv: 'development',
@@ -211,7 +211,7 @@ describe('Config Module', () => {
 
     it('should error on invalid port (too low)', () => {
       const config: Config = {
-        dbPath: '/path.db',
+        dbPath: '/path.w3cat',
         port: 0,
         nightlyRefreshHour: 0,
         nodeEnv: 'development',
@@ -228,7 +228,7 @@ describe('Config Module', () => {
 
     it('should error on invalid port (too high)', () => {
       const config: Config = {
-        dbPath: '/path.db',
+        dbPath: '/path.w3cat',
         port: 70000,
         nightlyRefreshHour: 0,
         nodeEnv: 'development',
@@ -245,7 +245,7 @@ describe('Config Module', () => {
 
     it('should accept valid port at boundaries', () => {
       const configLow: Config = {
-        dbPath: '/path.db',
+        dbPath: '/path.w3cat',
         port: 1,
         nightlyRefreshHour: 0,
         nodeEnv: 'development',
@@ -255,7 +255,7 @@ describe('Config Module', () => {
       };
 
       const configHigh: Config = {
-        dbPath: '/path.db',
+        dbPath: '/path.w3cat',
         port: 65535,
         nightlyRefreshHour: 0,
         nodeEnv: 'development',
@@ -270,7 +270,7 @@ describe('Config Module', () => {
 
     it('should return multiple errors when multiple issues exist', () => {
       const config: Config = {
-        dbPath: '/data/catalog.db',
+        dbPath: '/data/catalog.w3cat',
         port: 0,
         nightlyRefreshHour: 0,
         nodeEnv: 'production',

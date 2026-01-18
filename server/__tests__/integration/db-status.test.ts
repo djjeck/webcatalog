@@ -61,7 +61,7 @@ describe('GET /api/db-status', () => {
 
     mockDbManager = {
       getDb: vi.fn().mockReturnValue(mockDb),
-      getPath: vi.fn().mockReturnValue('/data/catalog.db'),
+      getPath: vi.fn().mockReturnValue('/data/catalog.w3cat'),
       getLastModified: vi.fn().mockReturnValue(1704067200000), // 2024-01-01
     };
 
@@ -78,7 +78,7 @@ describe('GET /api/db-status', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('connected', true);
-    expect(response.body).toHaveProperty('path', '/data/catalog.db');
+    expect(response.body).toHaveProperty('path', '/data/catalog.w3cat');
     expect(response.body).toHaveProperty('fileSize', 52428800);
     expect(response.body).toHaveProperty('lastModified');
     expect(response.body).toHaveProperty('lastLoaded');

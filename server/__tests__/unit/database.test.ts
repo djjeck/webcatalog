@@ -25,7 +25,7 @@ vi.mock('better-sqlite3', () => {
 });
 
 describe('Database Manager', () => {
-  const mockDbPath = '/test/path/catalog.db';
+  const mockDbPath = '/test/path/catalog.w3cat';
   const mockStats = {
     mtimeMs: 1000000,
   };

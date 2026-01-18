@@ -1,5 +1,7 @@
 # WebCatalog
 
+[![CI](https://github.com/djjeck/webcatalog/actions/workflows/ci.yml/badge.svg)](https://github.com/djjeck/webcatalog/actions/workflows/ci.yml)
+
 A web-based UI for searching [WinCatalog](https://www.wincatalog.com/) databases.
 
 ## Overview

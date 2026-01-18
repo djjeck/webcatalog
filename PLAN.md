@@ -270,7 +270,7 @@ webcatalog/
    - Test Docker build and run locally
    - Document Docker commands in README
 
-⬜ **3.9 GitHub Actions CI**
+✅ **3.9 GitHub Actions CI**
    - Create `.github/workflows/ci.yml`:
      - Trigger on push to main and pull requests
      - Run on ubuntu-latest

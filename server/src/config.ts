@@ -88,7 +88,6 @@ export function loadConfig(): Config {
 export function validateConfig(config: Config): string[] {
   const errors: string[] = [];
 
-
   // Port should be in valid range
   if (config.port < 1 || config.port > 65535) {
     errors.push(`Invalid port number: ${config.port}. Must be between 1-65535`);

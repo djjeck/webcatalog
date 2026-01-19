@@ -186,7 +186,7 @@ describe('buildSearchQuery', () => {
     expect(result.sql).toContain('LEFT JOIN w3_decent');
     expect(result.sql).toContain('LEFT JOIN w3_volumeInfo');
     expect(result.sql).toContain('WHERE');
-    expect(result.sql).toContain('ORDER BY w3_items.name ASC');
+    expect(result.sql).toContain('ORDER BY sr.name ASC'); // sr is the alias in the recursive CTE
     expect(result.params).toEqual(['%vacation%', '%vacation%']);
   });
 
@@ -231,6 +231,7 @@ describe('buildSearchQuery', () => {
   it('should select all necessary columns', () => {
     const result = buildSearchQuery('test');
 
+    // Columns selected in search_results CTE
     expect(result.sql).toContain('w3_items.id');
     expect(result.sql).toContain('w3_items.name');
     expect(result.sql).toContain('w3_items.itype');
@@ -239,8 +240,11 @@ describe('buildSearchQuery', () => {
     expect(result.sql).toContain('w3_fileInfo.date_change');
     expect(result.sql).toContain('w3_fileInfo.date_create');
     expect(result.sql).toContain('w3_decent.id_parent');
-    expect(result.sql).toContain('w3_volumeInfo.volume_label');
-    expect(result.sql).toContain('w3_volumeInfo.root_path');
+    // Volume info is joined via volume_ancestors CTE using vi alias
+    expect(result.sql).toContain('vi.volume_label');
+    expect(result.sql).toContain('vi.root_path');
+    // Full path is computed by the recursive CTE
+    expect(result.sql).toContain('va.full_path');
   });
 
   it('should handle SQL injection attempts', () => {

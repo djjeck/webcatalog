@@ -87,6 +87,10 @@ export function buildSearchWhereClause(terms: SearchTerm[]): {
 /**
  * Build complete search query SQL
  * Joins necessary tables and applies search conditions
+ *
+ * Uses a recursive CTE to walk up the parent tree to find the volume ancestor,
+ * since volume info is only stored on volume items (itype=172), not on files/folders.
+ * Also builds the full path by collecting ancestor names.
  */
 export function buildSearchQuery(searchString: string): {
   sql: string;
@@ -95,24 +99,76 @@ export function buildSearchQuery(searchString: string): {
   const terms = parseSearchQuery(searchString);
   const { clause, params } = buildSearchWhereClause(terms);
 
+  // Use recursive CTE to find volume ancestor and build path
   const sql = `
+    WITH RECURSIVE
+    -- First, get the base search results
+    search_results AS (
+      SELECT
+        w3_items.id,
+        w3_items.name,
+        w3_items.itype,
+        w3_fileInfo.name as file_name,
+        w3_fileInfo.size,
+        w3_fileInfo.date_change,
+        w3_fileInfo.date_create,
+        w3_decent.id_parent
+      FROM w3_items
+      LEFT JOIN w3_fileInfo ON w3_items.id = w3_fileInfo.id_item
+      LEFT JOIN w3_decent ON w3_items.id = w3_decent.id_item
+      WHERE ${clause}
+    ),
+    -- Walk up the parent tree to find volume ancestor
+    ancestor_chain AS (
+      -- Base case: start with each search result's parent
+      SELECT
+        sr.id as original_id,
+        sr.id_parent as current_id,
+        1 as depth,
+        sr.name as path_segment
+      FROM search_results sr
+      WHERE sr.id_parent IS NOT NULL
+
+      UNION ALL
+
+      -- Recursive case: keep walking up until we find a volume or hit root
+      SELECT
+        ac.original_id,
+        d.id_parent as current_id,
+        ac.depth + 1,
+        i.name || '/' || ac.path_segment as path_segment
+      FROM ancestor_chain ac
+      JOIN w3_decent d ON ac.current_id = d.id_item
+      JOIN w3_items i ON ac.current_id = i.id
+      WHERE d.id_parent IS NOT NULL
+        AND ac.depth < 100  -- Safety limit to prevent infinite loops
+    ),
+    -- Find the volume for each search result (the ancestor with itype=172)
+    volume_ancestors AS (
+      SELECT
+        ac.original_id,
+        ac.current_id as volume_id,
+        ac.path_segment as full_path
+      FROM ancestor_chain ac
+      JOIN w3_items i ON ac.current_id = i.id
+      WHERE i.itype = 172  -- Volume type
+    )
     SELECT
-      w3_items.id,
-      w3_items.name,
-      w3_items.itype,
-      w3_fileInfo.name as file_name,
-      w3_fileInfo.size,
-      w3_fileInfo.date_change,
-      w3_fileInfo.date_create,
-      w3_decent.id_parent,
-      w3_volumeInfo.volume_label,
-      w3_volumeInfo.root_path
-    FROM w3_items
-    LEFT JOIN w3_fileInfo ON w3_items.id = w3_fileInfo.id_item
-    LEFT JOIN w3_decent ON w3_items.id = w3_decent.id_item
-    LEFT JOIN w3_volumeInfo ON w3_items.id = w3_volumeInfo.id_item
-    WHERE ${clause}
-    ORDER BY w3_items.name ASC
+      sr.id,
+      sr.name,
+      sr.itype,
+      sr.file_name,
+      sr.size,
+      sr.date_change,
+      sr.date_create,
+      sr.id_parent,
+      vi.volume_label,
+      vi.root_path,
+      va.full_path
+    FROM search_results sr
+    LEFT JOIN volume_ancestors va ON sr.id = va.original_id
+    LEFT JOIN w3_volumeInfo vi ON va.volume_id = vi.id_item
+    ORDER BY sr.name ASC
   `.trim();
 
   return { sql, params };

@@ -23,6 +23,7 @@ interface RawSearchRow {
   id_parent: number | null;
   volume_label: string | null;
   root_path: string | null;
+  full_path: string | null;
 }
 
 /**
@@ -56,13 +57,24 @@ export function getItemType(itype: number): 'file' | 'folder' | 'volume' {
 
 /**
  * Build file path from parent hierarchy
- * This is a placeholder - full path construction requires recursive parent lookup
+ * Uses full_path computed by the recursive CTE query
  */
 export function buildPath(row: RawSearchRow): string {
-  // Use the file_name if available, otherwise use item name
+  // If we have the full path from the recursive query, use it
+  if (row.full_path) {
+    // Prepend volume root path or label if available
+    if (row.root_path) {
+      return `${row.root_path}${row.full_path}`;
+    }
+    if (row.volume_label) {
+      return `[${row.volume_label}]/${row.full_path}`;
+    }
+    return row.full_path;
+  }
+
+  // Fallback: use the file_name if available, otherwise use item name
   const name = row.file_name || row.name;
 
-  // If we have volume info, prepend it
   if (row.root_path) {
     return `${row.root_path}${name}`;
   }

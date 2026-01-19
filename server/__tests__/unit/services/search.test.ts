@@ -53,7 +53,43 @@ describe('getItemType', () => {
 });
 
 describe('buildPath', () => {
-  it('should use file_name when available', () => {
+  it('should use full_path with root_path when both available', () => {
+    const row = {
+      id: 1,
+      name: 'item_name',
+      itype: 0,
+      file_name: 'actual_file.txt',
+      size: 100,
+      date_change: null,
+      date_create: null,
+      id_parent: null,
+      volume_label: null,
+      root_path: 'E:\\Backup\\',
+      full_path: 'Folder/actual_file.txt',
+    };
+
+    expect(buildPath(row)).toBe('E:\\Backup\\Folder/actual_file.txt');
+  });
+
+  it('should use full_path with volume_label when root_path is null', () => {
+    const row = {
+      id: 1,
+      name: 'item_name',
+      itype: 0,
+      file_name: 'actual_file.txt',
+      size: 100,
+      date_change: null,
+      date_create: null,
+      id_parent: null,
+      volume_label: 'External Drive',
+      root_path: null,
+      full_path: 'Folder/actual_file.txt',
+    };
+
+    expect(buildPath(row)).toBe('[External Drive]/Folder/actual_file.txt');
+  });
+
+  it('should use full_path alone when no volume info', () => {
     const row = {
       id: 1,
       name: 'item_name',
@@ -65,12 +101,31 @@ describe('buildPath', () => {
       id_parent: null,
       volume_label: null,
       root_path: null,
+      full_path: 'Folder/actual_file.txt',
+    };
+
+    expect(buildPath(row)).toBe('Folder/actual_file.txt');
+  });
+
+  it('should fall back to file_name when full_path is null', () => {
+    const row = {
+      id: 1,
+      name: 'item_name',
+      itype: 0,
+      file_name: 'actual_file.txt',
+      size: 100,
+      date_change: null,
+      date_create: null,
+      id_parent: null,
+      volume_label: null,
+      root_path: null,
+      full_path: null,
     };
 
     expect(buildPath(row)).toBe('actual_file.txt');
   });
 
-  it('should fall back to name when file_name is null', () => {
+  it('should fall back to name when file_name and full_path are null', () => {
     const row = {
       id: 1,
       name: 'item_name',
@@ -82,12 +137,13 @@ describe('buildPath', () => {
       id_parent: null,
       volume_label: null,
       root_path: null,
+      full_path: null,
     };
 
     expect(buildPath(row)).toBe('item_name');
   });
 
-  it('should prepend root_path when available', () => {
+  it('should prepend root_path to fallback name', () => {
     const row = {
       id: 1,
       name: 'item_name',
@@ -99,12 +155,13 @@ describe('buildPath', () => {
       id_parent: null,
       volume_label: null,
       root_path: 'E:\\Backup\\',
+      full_path: null,
     };
 
     expect(buildPath(row)).toBe('E:\\Backup\\file.txt');
   });
 
-  it('should use volume_label when root_path is not available', () => {
+  it('should use volume_label with fallback name when root_path is not available', () => {
     const row = {
       id: 1,
       name: 'item_name',
@@ -116,12 +173,13 @@ describe('buildPath', () => {
       id_parent: null,
       volume_label: 'External Drive',
       root_path: null,
+      full_path: null,
     };
 
     expect(buildPath(row)).toBe('[External Drive]/file.txt');
   });
 
-  it('should prefer root_path over volume_label', () => {
+  it('should prefer root_path over volume_label in full_path', () => {
     const row = {
       id: 1,
       name: 'item_name',
@@ -133,9 +191,10 @@ describe('buildPath', () => {
       id_parent: null,
       volume_label: 'External Drive',
       root_path: 'D:\\',
+      full_path: 'Folder/file.txt',
     };
 
-    expect(buildPath(row)).toBe('D:\\file.txt');
+    expect(buildPath(row)).toBe('D:\\Folder/file.txt');
   });
 });
 
@@ -172,7 +231,7 @@ describe('mapRowToSearchResult', () => {
     const row = {
       id: 123,
       name: 'test_item',
-      itype: 0,
+      itype: ItemType.FILE, // 1 = file
       file_name: 'test.txt',
       size: 1024,
       date_change: '2024-01-15T10:00:00.000Z',
@@ -180,6 +239,7 @@ describe('mapRowToSearchResult', () => {
       id_parent: 1,
       volume_label: 'USB Drive',
       root_path: 'E:\\',
+      full_path: 'Documents/test.txt',
     };
 
     const result = mapRowToSearchResult(row);
@@ -187,7 +247,7 @@ describe('mapRowToSearchResult', () => {
     expect(result).toEqual({
       id: 123,
       name: 'test.txt',
-      path: 'E:\\test.txt',
+      path: 'E:\\Documents/test.txt',
       size: 1024,
       dateModified: '2024-01-15T10:00:00.000Z',
       dateCreated: '2024-01-10T08:00:00.000Z',
@@ -239,6 +299,7 @@ describe('mapRowToSearchResult', () => {
       id_parent: null,
       volume_label: 'External',
       root_path: 'F:\\',
+      full_path: null,
     };
 
     const result = mapRowToSearchResult(row);
@@ -290,7 +351,7 @@ describe('executeSearch', () => {
       {
         id: 1,
         name: 'test_file',
-        itype: 0,
+        itype: ItemType.FILE,
         file_name: 'test.txt',
         size: 1024,
         date_change: '2024-01-15',
@@ -298,6 +359,7 @@ describe('executeSearch', () => {
         id_parent: null,
         volume_label: null,
         root_path: null,
+        full_path: null,
       },
     ];
 
@@ -379,7 +441,7 @@ describe('executeSearch', () => {
       {
         id: 1,
         name: 'file1',
-        itype: 0,
+        itype: ItemType.FILE,
         file_name: 'file1.txt',
         size: 100,
         date_change: null,
@@ -387,11 +449,12 @@ describe('executeSearch', () => {
         id_parent: null,
         volume_label: null,
         root_path: null,
+        full_path: null,
       },
       {
         id: 2,
         name: 'file2',
-        itype: 0,
+        itype: ItemType.FILE,
         file_name: 'file2.txt',
         size: 200,
         date_change: null,
@@ -399,6 +462,7 @@ describe('executeSearch', () => {
         id_parent: null,
         volume_label: null,
         root_path: null,
+        full_path: null,
       },
     ];
 

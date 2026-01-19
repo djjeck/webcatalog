@@ -38,7 +38,7 @@ WinCatalog is a Windows utility that scans external drives and offers a search b
 # docker-compose.yml
 services:
   webcatalog:
-    image: webcatalog:latest
+    image: djjeck/webcatalog:latest
     # For local builds, replace the line above with:
     # build: .
     container_name: webcatalog
@@ -69,7 +69,7 @@ docker run -d \
   -p 3000:3000 \
   -v /path/to/your/catalog.w3cat:/data/catalog.w3cat:ro \
   --restart unless-stopped \
-  webcatalog:latest
+  djjeck/webcatalog:latest
 ```
 
 ### Local Development

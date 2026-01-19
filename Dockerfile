@@ -8,19 +8,20 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files for dependency installation
-COPY server/package*.json ./server/
+# Copy root package files and workspace package files for dependency installation
+COPY package*.json ./
+COPY server/package.json ./server/
+COPY client/package.json ./client/
 
 # Install all dependencies (including dev for building)
-WORKDIR /app/server
 RUN npm ci
 
-# Copy source files
-COPY server/tsconfig.json ./
-COPY server/src ./src
+# Copy server source files
+COPY server/tsconfig.json ./server/
+COPY server/src ./server/src
 
 # Build TypeScript to JavaScript
-RUN npm run build
+RUN npm run build --workspace=server
 
 # =============================================================================
 # Stage 2: Production stage
@@ -36,15 +37,17 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy package files
-COPY server/package*.json ./
+# Copy root package files and server package file
+COPY package*.json ./
+COPY server/package.json ./server/
+COPY client/package.json ./client/
 
 # Install only production dependencies
-RUN npm ci --only=production && \
+RUN npm ci --omit=dev && \
     npm cache clean --force
 
 # Copy built application from builder stage
-COPY --from=builder /app/server/dist ./dist
+COPY --from=builder /app/server/dist ./server/dist
 
 # Create data directory for database mount
 RUN mkdir -p /data && chown nodejs:nodejs /data
@@ -68,4 +71,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the server
-CMD ["node", "dist/index.js"]
+CMD ["node", "server/dist/index.js"]

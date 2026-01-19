@@ -29,21 +29,26 @@ import { buildSearchQuery } from '../../../src/db/queries.js';
 import { checkAndReloadIfChanged } from '../../../src/services/refresh.js';
 
 describe('getItemType', () => {
-  it('should return "volume" for VOLUME type', () => {
+  it('should return "volume" for VOLUME type (172)', () => {
     expect(getItemType(ItemType.VOLUME)).toBe('volume');
+    expect(getItemType(172)).toBe('volume');
   });
 
-  it('should return "folder" for folder types (1, 2, 3)', () => {
-    expect(getItemType(1)).toBe('folder');
-    expect(getItemType(2)).toBe('folder');
-    expect(getItemType(3)).toBe('folder');
+  it('should return "folder" for FOLDER type (200) and CATALOG_ROOT (150)', () => {
+    expect(getItemType(ItemType.FOLDER)).toBe('folder');
+    expect(getItemType(200)).toBe('folder');
+    expect(getItemType(ItemType.CATALOG_ROOT)).toBe('folder');
+    expect(getItemType(150)).toBe('folder');
   });
 
-  it('should return "file" for other types', () => {
+  it('should return "file" for FILE type (1) and other types', () => {
+    expect(getItemType(ItemType.FILE)).toBe('file');
+    expect(getItemType(1)).toBe('file');
     expect(getItemType(0)).toBe('file');
+    expect(getItemType(2)).toBe('file');
+    expect(getItemType(3)).toBe('file');
     expect(getItemType(4)).toBe('file');
     expect(getItemType(100)).toBe('file');
-    expect(getItemType(ItemType.CATALOG_ROOT)).toBe('file');
   });
 });
 
@@ -196,7 +201,7 @@ describe('mapRowToSearchResult', () => {
     const row = {
       id: 123,
       name: 'folder_item',
-      itype: 1,
+      itype: ItemType.FOLDER, // 200 = folder
       file_name: null,
       size: null,
       date_change: null,
@@ -204,6 +209,7 @@ describe('mapRowToSearchResult', () => {
       id_parent: null,
       volume_label: null,
       root_path: null,
+      full_path: null,
     };
 
     const result = mapRowToSearchResult(row);

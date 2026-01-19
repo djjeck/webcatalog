@@ -37,17 +37,20 @@ const MAX_LIMIT = 1000;
 
 /**
  * Determine item type from itype value
+ * Based on analysis of actual WinCatalog database:
+ * - itype=1: File
+ * - itype=200: Folder
+ * - itype=172: Volume
+ * - itype=150: Catalog root
  */
 export function getItemType(itype: number): 'file' | 'folder' | 'volume' {
   if (itype === ItemType.VOLUME) {
     return 'volume';
   }
-  // Folder types typically have specific values, files are the default
-  // Based on observed patterns in WinCatalog databases
-  // itype values 1, 2, 3 are commonly folders; others are files
-  if (itype === 1 || itype === 2 || itype === 3) {
+  if (itype === ItemType.FOLDER || itype === ItemType.CATALOG_ROOT) {
     return 'folder';
   }
+  // itype=1 (FILE) and any other values default to file
   return 'file';
 }
 

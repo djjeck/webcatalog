@@ -207,9 +207,15 @@ export interface W3Statistic {
 
 /**
  * Known item type values
+ * Based on analysis of actual WinCatalog database:
+ * - itype=1: File (most common, 227612 items in test DB)
+ * - itype=200: Folder (18671 items in test DB)
+ * - itype=172: Volume (31 items in test DB)
+ * - itype=150: Catalog root
  */
 export enum ItemType {
+  FILE = 1,
+  FOLDER = 200,
   CATALOG_ROOT = 150,
   VOLUME = 172,
-  // Additional types to be discovered
 }

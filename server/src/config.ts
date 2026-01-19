@@ -88,12 +88,6 @@ export function loadConfig(): Config {
 export function validateConfig(config: Config): string[] {
   const errors: string[] = [];
 
-  // In production, DB_PATH should be explicitly set
-  if (config.isProduction && config.dbPath === defaults.dbPath) {
-    errors.push(
-      'DB_PATH should be explicitly set in production (currently using default)'
-    );
-  }
 
   // Port should be in valid range
   if (config.port < 1 || config.port > 65535) {

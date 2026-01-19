@@ -176,39 +176,6 @@ describe('Config Module', () => {
       expect(errors).toEqual([]);
     });
 
-    it('should warn when using default DB_PATH in production', () => {
-      const config: Config = {
-        dbPath: '/data/catalog.w3cat',
-        port: 3000,
-        nightlyRefreshHour: 0,
-        nodeEnv: 'production',
-        isProduction: true,
-        isDevelopment: false,
-        isTest: false,
-      };
-
-      const errors = validateConfig(config);
-
-      expect(errors).toHaveLength(1);
-      expect(errors[0]).toContain('DB_PATH should be explicitly set');
-    });
-
-    it('should not warn about default DB_PATH in development', () => {
-      const config: Config = {
-        dbPath: '/data/catalog.w3cat',
-        port: 3000,
-        nightlyRefreshHour: 0,
-        nodeEnv: 'development',
-        isProduction: false,
-        isDevelopment: true,
-        isTest: false,
-      };
-
-      const errors = validateConfig(config);
-
-      expect(errors).toEqual([]);
-    });
-
     it('should error on invalid port (too low)', () => {
       const config: Config = {
         dbPath: '/path.w3cat',
@@ -268,7 +235,7 @@ describe('Config Module', () => {
       expect(validateConfig(configHigh)).toEqual([]);
     });
 
-    it('should return multiple errors when multiple issues exist', () => {
+    it('should return error for invalid port in production', () => {
       const config: Config = {
         dbPath: '/data/catalog.w3cat',
         port: 0,
@@ -281,7 +248,8 @@ describe('Config Module', () => {
 
       const errors = validateConfig(config);
 
-      expect(errors).toHaveLength(2);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('Invalid port');
     });
   });
 

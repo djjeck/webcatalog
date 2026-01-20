@@ -306,7 +306,7 @@ webcatalog/
 
 #### Tasks:
 
-⬜ **4.1 API Client** (`client/src/services/api.ts`)
+✅ **4.1 API Client** (`client/src/services/api.ts`)
    - Create typed API client using fetch
    - Implement methods:
      - `search(query: string): Promise<SearchResult[]>`

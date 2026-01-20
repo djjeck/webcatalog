@@ -105,19 +105,18 @@ describe('App', () => {
       const user = userEvent.setup();
       render(<App />);
 
-      // Wait for db status to load first to avoid act warnings
+      // Wait for db status to load first
       await waitFor(() => {
         expect(screen.getByText('Connected')).toBeInTheDocument();
       });
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
-      // Check for loading state in results area
-      const loadingState = document.querySelector('.loading-state');
-      expect(loadingState).toBeInTheDocument();
-      expect(loadingState?.querySelector('.loading-spinner')).toBeInTheDocument();
+      // Wait for debounce and check for loading indicator
+      await waitFor(() => {
+        expect(document.querySelector('.loading-state')).toBeInTheDocument();
+      }, { timeout: 500 });
     });
 
     it('should call search API and display results', async () => {
@@ -128,15 +127,16 @@ describe('App', () => {
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation photos');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
-      // Verify API was called correctly (with pagination limit)
+      // Wait for debounce and API call
       await waitFor(() => {
-        expect(mockSearch).toHaveBeenCalledWith({ query: 'vacation photos', limit: 50 });
-      });
+        expect(mockSearch) .toHaveBeenCalledWith(expect.objectContaining({ query: 'vacation photos', limit: 50 }));
+      }, { timeout: 500 });
 
-      // Verify results are displayed (detailed rendering tested in SearchResults unit tests)
-      expect(screen.getByText('2 results found')).toBeInTheDocument();
+      // Verify results are displayed
+      await waitFor(() => {
+        expect(screen.getByText('2 results found')).toBeInTheDocument();
+      });
     });
 
     it('should transition to no-results state when search returns empty', async () => {
@@ -152,10 +152,31 @@ describe('App', () => {
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'nonexistent');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
       await waitFor(() => {
         expect(screen.getByText('No Results Found')).toBeInTheDocument();
+      }, { timeout: 500 });
+    });
+
+    it('should clear results when input is emptied', async () => {
+      mockSearch.mockResolvedValue(mockSearchResponse);
+
+      const user = userEvent.setup();
+      render(<App />);
+
+      const input = screen.getByPlaceholderText('Search files and folders...');
+      await user.type(input, 'vacation');
+
+      await waitFor(() => {
+        expect(screen.getByText('2 results found')).toBeInTheDocument();
+      }, { timeout: 500 });
+
+      // Clear the input
+      await user.clear(input);
+
+      // Should return to initial state
+      await waitFor(() => {
+        expect(screen.getByText('Search Your Catalog')).toBeInTheDocument();
       });
     });
   });
@@ -171,11 +192,10 @@ describe('App', () => {
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
       await waitFor(() => {
         expect(screen.getByText('Something Went Wrong')).toBeInTheDocument();
-      });
+      }, { timeout: 500 });
 
       expect(
         screen.getByText('Database connection failed')
@@ -190,11 +210,10 @@ describe('App', () => {
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
       await waitFor(() => {
         expect(screen.getByText('Something Went Wrong')).toBeInTheDocument();
-      });
+      }, { timeout: 500 });
 
       expect(
         screen.getByText('An error occurred while searching')
@@ -230,12 +249,11 @@ describe('App', () => {
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
       // Results state replaces initial state
       await waitFor(() => {
         expect(screen.getByText('2 results found')).toBeInTheDocument();
-      });
+      }, { timeout: 500 });
 
       expect(
         screen.queryByText('Search Your Catalog')
@@ -258,20 +276,18 @@ describe('App', () => {
       // First search
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
       await waitFor(() => {
         expect(screen.getByText('2 results found')).toBeInTheDocument();
-      });
+      }, { timeout: 500 });
 
       // Second search
       await user.clear(input);
       await user.type(input, 'photos');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
       await waitFor(() => {
         expect(screen.getByText('1 result found')).toBeInTheDocument();
-      });
+      }, { timeout: 500 });
     });
 
     it('should allow searching again after error', async () => {
@@ -285,20 +301,18 @@ describe('App', () => {
       // First search fails
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
       await waitFor(() => {
         expect(screen.getByText('Something Went Wrong')).toBeInTheDocument();
-      });
+      }, { timeout: 500 });
 
       // Second search succeeds
       await user.clear(input);
       await user.type(input, 'vacation');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
       await waitFor(() => {
         expect(screen.getByText('2 results found')).toBeInTheDocument();
-      });
+      }, { timeout: 500 });
     });
   });
 });

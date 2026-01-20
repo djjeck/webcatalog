@@ -1,24 +1,17 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SearchBar } from '../../src/components/SearchBar';
 
 describe('SearchBar', () => {
   describe('rendering', () => {
-    it('should render input field and search button', () => {
+    it('should render input field and help button', () => {
       const onSearch = vi.fn();
       render(<SearchBar onSearch={onSearch} />);
 
       expect(
         screen.getByPlaceholderText('Search files and folders...')
       ).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
-    });
-
-    it('should render help button', () => {
-      const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} />);
-
       expect(
         screen.getByRole('button', { name: 'Toggle search help' })
       ).toBeInTheDocument();
@@ -30,42 +23,41 @@ describe('SearchBar', () => {
 
       expect(screen.getByDisplayValue('test query')).toBeInTheDocument();
     });
-
-    it('should show loading state', () => {
-      const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} isLoading={true} />);
-
-      expect(
-        screen.getByRole('button', { name: 'Search' })
-      ).toHaveTextContent('Searching...');
-      expect(
-        screen.getByPlaceholderText('Search files and folders...')
-      ).toBeDisabled();
-    });
   });
 
-  describe('search submission', () => {
-    it('should call onSearch when form is submitted with valid query', async () => {
+  describe('live search with debounce', () => {
+    it('should call onSearch after debounce delay when typing', async () => {
       const user = userEvent.setup();
       const onSearch = vi.fn();
       render(<SearchBar onSearch={onSearch} />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
-      await user.type(input, 'vacation photos');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
+      await user.type(input, 'test');
 
-      expect(onSearch).toHaveBeenCalledWith('vacation photos');
+      // Wait for debounce to complete
+      await waitFor(() => {
+        expect(onSearch).toHaveBeenCalledWith('test');
+      }, { timeout: 500 });
+
+      expect(onSearch).toHaveBeenCalledTimes(1);
     });
 
-    it('should call onSearch when pressing Enter', async () => {
+    it('should debounce rapid keystrokes', async () => {
       const user = userEvent.setup();
       const onSearch = vi.fn();
       render(<SearchBar onSearch={onSearch} />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
-      await user.type(input, 'vacation photos{enter}');
+      await user.type(input, 'vac');
 
-      expect(onSearch).toHaveBeenCalledWith('vacation photos');
+      // Wait for debounce
+      await waitFor(() => {
+        expect(onSearch).toHaveBeenCalled();
+      }, { timeout: 500 });
+
+      // Should only be called once with final value
+      expect(onSearch).toHaveBeenCalledWith('vac');
+      expect(onSearch).toHaveBeenCalledTimes(1);
     });
 
     it('should trim whitespace from query', async () => {
@@ -74,36 +66,38 @@ describe('SearchBar', () => {
       render(<SearchBar onSearch={onSearch} />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
-      await user.type(input, '  vacation photos  ');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
+      await user.type(input, '  test  ');
 
-      expect(onSearch).toHaveBeenCalledWith('vacation photos');
+      await waitFor(() => {
+        expect(onSearch).toHaveBeenCalledWith('test');
+      }, { timeout: 500 });
     });
 
-    it('should not call onSearch with empty query', async () => {
+    it('should call onClear when input is cleared', async () => {
       const user = userEvent.setup();
       const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} />);
+      const onClear = vi.fn();
+      render(<SearchBar onSearch={onSearch} onClear={onClear} initialQuery="test" />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
-      await user.type(input, '   ');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
+      await user.clear(input);
 
+      // onClear should be called immediately (no debounce for clearing)
+      expect(onClear).toHaveBeenCalledTimes(1);
       expect(onSearch).not.toHaveBeenCalled();
     });
 
-    it('should disable search button when query is empty', () => {
+    it('should call onClear when input becomes whitespace only', async () => {
+      const user = userEvent.setup();
       const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} />);
+      const onClear = vi.fn();
+      render(<SearchBar onSearch={onSearch} onClear={onClear} initialQuery="test" />);
 
-      expect(screen.getByRole('button', { name: 'Search' })).toBeDisabled();
-    });
+      const input = screen.getByPlaceholderText('Search files and folders...');
+      await user.clear(input);
+      await user.type(input, '   ');
 
-    it('should disable search button when loading', () => {
-      const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} isLoading={true} initialQuery="test" />);
-
-      expect(screen.getByRole('button', { name: 'Search' })).toBeDisabled();
+      expect(onClear).toHaveBeenCalled();
     });
   });
 
@@ -145,7 +139,6 @@ describe('SearchBar', () => {
       );
 
       expect(screen.getByText('Search Syntax')).toBeInTheDocument();
-      // Check that code examples are shown
       expect(screen.getByRole('tooltip')).toBeInTheDocument();
     });
   });
@@ -158,9 +151,10 @@ describe('SearchBar', () => {
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, '"exact phrase" other terms');
-      await user.click(screen.getByRole('button', { name: 'Search' }));
 
-      expect(onSearch).toHaveBeenCalledWith('"exact phrase" other terms');
+      await waitFor(() => {
+        expect(onSearch).toHaveBeenCalledWith('"exact phrase" other terms');
+      }, { timeout: 500 });
     });
   });
 
@@ -173,19 +167,10 @@ describe('SearchBar', () => {
         screen.getByRole('textbox', { name: 'Search query' })
       ).toBeInTheDocument();
     });
-
-    it('should have accessible search button', () => {
-      const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} />);
-
-      expect(
-        screen.getByRole('button', { name: 'Search' })
-      ).toBeInTheDocument();
-    });
   });
 
   describe('autofocus', () => {
-    it('should focus input', () => {
+    it('should focus input on mount', () => {
       const onSearch = vi.fn();
       render(<SearchBar onSearch={onSearch} />);
 
@@ -219,20 +204,6 @@ describe('SearchBar', () => {
       await user.keyboard('{Escape}');
 
       expect(input).toHaveValue('');
-    });
-
-    it('should work with empty input', async () => {
-      const user = userEvent.setup();
-      const onSearch = vi.fn();
-      const onClear = vi.fn();
-      render(<SearchBar onSearch={onSearch} onClear={onClear} />);
-
-      const input = screen.getByPlaceholderText('Search files and folders...');
-      await user.click(input);
-      await user.keyboard('{Escape}');
-
-      expect(input).toHaveValue('');
-      expect(onClear).toHaveBeenCalledTimes(1);
     });
   });
 });

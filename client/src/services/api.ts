@@ -18,6 +18,7 @@ export interface SearchParams {
   query: string;
   limit?: number;
   offset?: number;
+  signal?: AbortSignal;
 }
 
 /**
@@ -95,7 +96,7 @@ async function fetchWithErrorHandling<T>(
  * @throws ApiError if the request fails
  */
 export async function search(params: SearchParams): Promise<SearchResponse> {
-  const { query, limit, offset } = params;
+  const { query, limit, offset, signal } = params;
   const searchParams = new URLSearchParams({ q: query });
 
   if (limit !== undefined) {
@@ -106,7 +107,7 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
   }
 
   const url = `${getBaseUrl()}/search?${searchParams.toString()}`;
-  return fetchWithErrorHandling<SearchResponse>(url);
+  return fetchWithErrorHandling<SearchResponse>(url, { signal });
 }
 
 /**

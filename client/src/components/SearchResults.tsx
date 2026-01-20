@@ -61,7 +61,9 @@ export function SearchResults({
             onClick={onLoadMore}
             disabled={isLoadingMore}
           >
-            {isLoadingMore ? 'Loading...' : `Load more (${results.length} of ${totalResults})`}
+            {isLoadingMore
+              ? 'Loading...'
+              : `Load more (${results.length} of ${totalResults})`}
           </button>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { SearchBar } from './components/SearchBar';
 import { SearchResults } from './components/SearchResults';
 import { StatusBar } from './components/StatusBar';
@@ -36,6 +36,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  // Abort controller for cancelling in-flight search requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   // Database status state
   const [dbStatus, setDbStatus] = useState<DbStatusResponse | null>(null);
   const [dbStatusLoading, setDbStatusLoading] = useState(true);
@@ -65,13 +68,25 @@ function App() {
 
   // Handle search submission
   const handleSearch = useCallback(async (searchQuery: string) => {
+    // Cancel any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setQuery(searchQuery);
     setAppState('loading');
     setError(null);
-    setResults([]);
 
     try {
-      const response = await search({ query: searchQuery, limit: PAGE_SIZE });
+      const response = await search({
+        query: searchQuery,
+        limit: PAGE_SIZE,
+        signal: abortController.signal,
+      });
       setResults(response.results);
       setTotalResults(response.totalResults);
       setExecutionTime(response.executionTime);
@@ -82,6 +97,10 @@ function App() {
         setAppState('results');
       }
     } catch (err) {
+      // Ignore abort errors - they're expected when a new search supersedes an old one
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       const message =
         err instanceof ApiError
           ? err.message
@@ -139,7 +158,6 @@ function App() {
           <SearchBar
             onSearch={handleSearch}
             onClear={handleClear}
-            isLoading={appState === 'loading'}
             initialQuery={query}
           />
         </div>

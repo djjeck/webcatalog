@@ -3,57 +3,80 @@ import {
   useCallback,
   useRef,
   useEffect,
-  type FormEvent,
   type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
 
+const DEBOUNCE_MS = 300;
+
 export interface SearchBarProps {
   onSearch: (query: string) => void;
   onClear?: () => void;
-  isLoading?: boolean;
   initialQuery?: string;
 }
 
 /**
- * SearchBar component with input field and submit button
+ * SearchBar component with live search and debouncing
  * Supports quoted phrase search syntax
  */
 export function SearchBar({
   onSearch,
   onClear,
-  isLoading = false,
   initialQuery = '',
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
   const [showHelp, setShowHelp] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Autofocus on mount
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  });
+  }, []);
 
-  const handleSubmit = useCallback(
-    (e: FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const trimmedQuery = query.trim();
-      if (trimmedQuery) {
-        onSearch(trimmedQuery);
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
+  const handleInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setQuery(newValue);
+
+      // Clear any pending debounce
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+
+      const trimmedValue = newValue.trim();
+
+      if (!trimmedValue) {
+        // Clear immediately when empty
+        onClear?.();
+      } else {
+        // Debounce search
+        debounceRef.current = setTimeout(() => {
+          onSearch(trimmedValue);
+        }, DEBOUNCE_MS);
       }
     },
-    [query, onSearch]
+    [onSearch, onClear]
   );
-
-  const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-  }, []);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Escape') {
+        // Clear debounce timer
+        if (debounceRef.current) {
+          clearTimeout(debounceRef.current);
+        }
         setQuery('');
         onClear?.();
       }
@@ -67,7 +90,7 @@ export function SearchBar({
 
   return (
     <div className="search-bar">
-      <form onSubmit={handleSubmit} className="search-form">
+      <div className="search-form">
         <input
           ref={inputRef}
           type="text"
@@ -76,17 +99,8 @@ export function SearchBar({
           onKeyDown={handleKeyDown}
           placeholder="Search files and folders..."
           className="search-input"
-          disabled={isLoading}
           aria-label="Search query"
         />
-        <button
-          type="submit"
-          className="search-button"
-          disabled={isLoading || !query.trim()}
-          aria-label="Search"
-        >
-          {isLoading ? 'Searching...' : 'Search'}
-        </button>
         <button
           type="button"
           className="help-button"
@@ -96,7 +110,7 @@ export function SearchBar({
         >
           ?
         </button>
-      </form>
+      </div>
       {showHelp && (
         <div className="search-help" role="tooltip">
           <h4>Search Syntax</h4>

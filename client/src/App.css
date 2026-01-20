@@ -163,34 +163,13 @@
   color: var(--color-text-muted);
 }
 
-.search-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: white;
-  background-color: var(--color-accent);
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: background-color 150ms ease, transform 150ms ease;
-  white-space: nowrap;
-}
-
-.search-button:hover:not(:disabled) {
-  background-color: var(--color-accent-hover);
-}
-
-.search-button:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.search-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.search-loading {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .help-button {

@@ -2,7 +2,7 @@
 # Multi-stage build for optimal image size
 
 # =============================================================================
-# Stage 1: Build stage
+# Stage 1: Build stage - Build both server and client
 # =============================================================================
 FROM node:20-alpine AS builder
 
@@ -20,8 +20,19 @@ RUN npm ci
 COPY server/tsconfig.json ./server/
 COPY server/src ./server/src
 
-# Build TypeScript to JavaScript
+# Copy client source files
+COPY client/tsconfig.json ./client/
+COPY client/tsconfig.app.json ./client/
+COPY client/tsconfig.node.json ./client/
+COPY client/vite.config.ts ./client/
+COPY client/index.html ./client/
+COPY client/src ./client/src
+
+# Build TypeScript server
 RUN npm run build --workspace=server
+
+# Build React client
+RUN npm run build --workspace=client
 
 # =============================================================================
 # Stage 2: Production stage
@@ -46,8 +57,11 @@ COPY client/package.json ./client/
 RUN npm ci --omit=dev && \
     npm cache clean --force
 
-# Copy built application from builder stage
+# Copy built server application from builder stage
 COPY --from=builder /app/server/dist ./server/dist
+
+# Copy built client application to public directory for static serving
+COPY --from=builder /app/client/dist ./public
 
 # Create data directory for database mount
 RUN mkdir -p /data && chown nodejs:nodejs /data
@@ -59,6 +73,7 @@ USER nodejs
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV DB_PATH=/data/catalog.w3cat
+ENV STATIC_PATH=./public
 
 # Expose the default port (documentation only - actual port determined by PORT env var)
 EXPOSE 3000

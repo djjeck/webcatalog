@@ -139,12 +139,13 @@ All searches are case-insensitive and match partial words.
 
 ## Environment Variables
 
-| Variable               | Description                          | Default               |
-| ---------------------- | ------------------------------------ | --------------------- |
-| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload  | `0` (midnight)        |
-| `PORT`                 | Server port                          | `3000`                |
-| `NODE_ENV`             | Environment (development/production) | `production`          |
-| `DB_PATH`              | Path to WinCatalog `.w3cat` file     | `/data/catalog.w3cat` |
+| Variable               | Description                             | Default               |
+| ---------------------- | --------------------------------------- | --------------------- |
+| `DB_PATH`              | Path to WinCatalog `.w3cat` file        | `/data/catalog.w3cat` |
+| `PORT`                 | Server port                             | `3000`                |
+| `NODE_ENV`             | Environment (development/production)    | `production`          |
+| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload     | `0` (midnight)        |
+| `STATIC_PATH`          | Path to static files directory (the UI) | `./public`            |
 
 ## Database Schema
 

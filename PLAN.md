@@ -404,7 +404,7 @@ webcatalog/
    - Write tests for static file serving
    - Ensure >80% coverage
 
-⬜ **5.2 Update Dockerfile for Full App**
+✅ **5.2 Update Dockerfile for Full App**
    - Update `Dockerfile` to build frontend:
      - Add build stage for client (npm run build)
      - Copy built frontend assets to server's public directory

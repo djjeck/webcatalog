@@ -4,6 +4,15 @@ import react from '@vitejs/plugin-react';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      // Dev proxy to backend server (not used in production builds)
+      '/api': {
+        target: `http://localhost:${process.env.PORT || 3000}`,
+        changeOrigin: true,
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

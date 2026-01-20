@@ -1,8 +1,13 @@
 /**
- * Format file size in human-readable format
+ * Format bytes to human-readable size
+ * @param bytes - Number of bytes (or null)
+ * @param nullDisplay - What to display for null/zero values (default: '-')
  */
-export function formatFileSize(bytes: number | null): string {
-  if (bytes === null || bytes === 0) return '-';
+export function formatBytes(
+  bytes: number | null,
+  nullDisplay: string = '-'
+): string {
+  if (bytes === null || bytes === 0) return nullDisplay;
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   let size = bytes;
   let unitIndex = 0;
@@ -11,6 +16,39 @@ export function formatFileSize(bytes: number | null): string {
     unitIndex++;
   }
   return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+/**
+ * Format file size in human-readable format
+ * Returns '-' for null or zero values
+ */
+export function formatFileSize(bytes: number | null): string {
+  return formatBytes(bytes, '-');
+}
+
+/**
+ * Format date string to relative time or absolute date
+ */
+export function formatLastUpdated(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60)
+    return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+  if (diffHours < 24)
+    return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 /**

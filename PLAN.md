@@ -320,7 +320,7 @@ webcatalog/
      - Test request formatting
    - Ensure >80% coverage
 
-🔄 **4.2 Search Components**
+✅ **4.2 Search Components**
    - Create `SearchBar.tsx`:
      - Input with submit button
      - Handle quoted phrase input
@@ -340,7 +340,7 @@ webcatalog/
      - Mock API calls
    - Ensure >80% coverage
 
-⬜ **4.3 UI Components**
+✅ **4.3 UI Components**
    - Create `StatusBar.tsx`:
      - Show database last updated time
      - Show file count

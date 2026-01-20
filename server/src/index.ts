@@ -8,6 +8,7 @@ import { getConfig, validateConfig } from './config.js';
 import { initDatabase } from './db/database.js';
 import { scheduleNightlyRefresh } from './services/refresh.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
+import { createStaticMiddleware } from './middleware/static.js';
 
 const app = express();
 const config = getConfig();
@@ -19,8 +20,16 @@ app.use(express.json());
 // API routes
 app.use('/api', apiRoutes);
 
+// Static file serving (in production or when explicitly enabled)
+if (config.serveStatic) {
+  app.use(createStaticMiddleware(config.staticPath));
+}
+
 // Error handling (must be after routes)
-app.use(notFoundHandler);
+// Only use notFoundHandler when not serving static files (static middleware handles its own 404)
+if (!config.serveStatic) {
+  app.use(notFoundHandler);
+}
 app.use(errorHandler);
 
 /**

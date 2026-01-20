@@ -21,6 +21,10 @@ export interface Config {
   isDevelopment: boolean;
   /** Whether the app is running in test mode */
   isTest: boolean;
+  /** Path to static files directory (built React app) */
+  staticPath: string;
+  /** Whether to serve static files */
+  serveStatic: boolean;
 }
 
 /**
@@ -31,6 +35,7 @@ const defaults = {
   port: 3000,
   nightlyRefreshHour: 0,
   nodeEnv: 'development',
+  staticPath: './public',
 };
 
 /**
@@ -69,6 +74,12 @@ function parseRefreshHour(value: string | undefined): number {
  */
 export function loadConfig(): Config {
   const nodeEnv = process.env.NODE_ENV || defaults.nodeEnv;
+  const staticPath = process.env.STATIC_PATH || defaults.staticPath;
+  // Serve static files by default in production, or if SERVE_STATIC is explicitly set
+  const serveStatic =
+    process.env.SERVE_STATIC !== undefined
+      ? process.env.SERVE_STATIC === 'true'
+      : nodeEnv === 'production';
 
   return {
     dbPath: process.env.DB_PATH || defaults.dbPath,
@@ -78,6 +89,8 @@ export function loadConfig(): Config {
     isProduction: nodeEnv === 'production',
     isDevelopment: nodeEnv === 'development',
     isTest: nodeEnv === 'test',
+    staticPath,
+    serveStatic,
   };
 }
 

@@ -398,7 +398,7 @@ webcatalog/
 
 #### Tasks:
 
-⬜ **5.1 Backend Static File Serving**
+✅ **5.1 Backend Static File Serving**
    - Configure Express to serve built React app
    - Serve `index.html` for all non-API routes (SPA support)
    - Write tests for static file serving

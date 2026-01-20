@@ -29,6 +29,8 @@ describe('Config Module', () => {
       delete process.env.PORT;
       delete process.env.NIGHTLY_REFRESH_HOUR;
       delete process.env.NODE_ENV;
+      delete process.env.STATIC_PATH;
+      delete process.env.SERVE_STATIC;
 
       const config = loadConfig();
 
@@ -36,6 +38,8 @@ describe('Config Module', () => {
       expect(config.port).toBe(3000);
       expect(config.nightlyRefreshHour).toBe(0);
       expect(config.nodeEnv).toBe('development');
+      expect(config.staticPath).toBe('./public');
+      expect(config.serveStatic).toBe(false); // false in development by default
     });
 
     it('should read DB_PATH from environment', () => {
@@ -71,6 +75,32 @@ describe('Config Module', () => {
       expect(config.isProduction).toBe(true);
       expect(config.isDevelopment).toBe(false);
       expect(config.isTest).toBe(false);
+      expect(config.serveStatic).toBe(true); // true by default in production
+    });
+
+    it('should read STATIC_PATH from environment', () => {
+      process.env.STATIC_PATH = '/custom/static';
+
+      const config = loadConfig();
+
+      expect(config.staticPath).toBe('/custom/static');
+    });
+
+    it('should read SERVE_STATIC from environment', () => {
+      process.env.SERVE_STATIC = 'true';
+
+      const config = loadConfig();
+
+      expect(config.serveStatic).toBe(true);
+    });
+
+    it('should disable static serving when SERVE_STATIC is false', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.SERVE_STATIC = 'false';
+
+      const config = loadConfig();
+
+      expect(config.serveStatic).toBe(false);
     });
 
     it('should set isTest correctly', () => {
@@ -169,6 +199,8 @@ describe('Config Module', () => {
         isProduction: false,
         isDevelopment: true,
         isTest: false,
+        staticPath: './public',
+        serveStatic: false,
       };
 
       const errors = validateConfig(config);
@@ -185,6 +217,8 @@ describe('Config Module', () => {
         isProduction: false,
         isDevelopment: true,
         isTest: false,
+        staticPath: './public',
+        serveStatic: false,
       };
 
       const errors = validateConfig(config);
@@ -202,6 +236,8 @@ describe('Config Module', () => {
         isProduction: false,
         isDevelopment: true,
         isTest: false,
+        staticPath: './public',
+        serveStatic: false,
       };
 
       const errors = validateConfig(config);
@@ -219,6 +255,8 @@ describe('Config Module', () => {
         isProduction: false,
         isDevelopment: true,
         isTest: false,
+        staticPath: './public',
+        serveStatic: false,
       };
 
       const configHigh: Config = {
@@ -229,6 +267,8 @@ describe('Config Module', () => {
         isProduction: false,
         isDevelopment: true,
         isTest: false,
+        staticPath: './public',
+        serveStatic: false,
       };
 
       expect(validateConfig(configLow)).toEqual([]);
@@ -244,6 +284,8 @@ describe('Config Module', () => {
         isProduction: true,
         isDevelopment: false,
         isTest: false,
+        staticPath: './public',
+        serveStatic: true,
       };
 
       const errors = validateConfig(config);

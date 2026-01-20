@@ -320,7 +320,7 @@ webcatalog/
      - Test request formatting
    - Ensure >80% coverage
 
-⬜ **4.2 Search Components**
+🔄 **4.2 Search Components**
    - Create `SearchBar.tsx`:
      - Input with submit button
      - Handle quoted phrase input

@@ -352,7 +352,7 @@ webcatalog/
    - Write component tests
    - Ensure >80% coverage
 
-⬜ **4.4 Main App** (`client/src/App.tsx`)
+✅ **4.4 Main App** (`client/src/App.tsx`)
    - Implement layout structure
    - Search state management (useState)
    - Handle search submission

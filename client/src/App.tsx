@@ -4,10 +4,12 @@ import { SearchResults } from './components/SearchResults';
 import { StatusBar } from './components/StatusBar';
 import { EmptyState } from './components/EmptyState';
 import { search, getDbStatus, ApiError } from './services/api';
-import type { SearchResponse, DbStatusResponse } from './types/api';
+import type { DbStatusResponse, SearchResultItem } from './types/api';
 import './App.css';
 
 type AppState = 'initial' | 'loading' | 'results' | 'no-results' | 'error';
+
+const PAGE_SIZE = 50;
 
 /**
  * Parse search query into individual terms for highlighting
@@ -28,10 +30,11 @@ function App() {
   // Search state
   const [appState, setAppState] = useState<AppState>('initial');
   const [query, setQuery] = useState('');
-  const [searchResponse, setSearchResponse] = useState<SearchResponse | null>(
-    null
-  );
+  const [results, setResults] = useState<SearchResultItem[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [executionTime, setExecutionTime] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Database status state
   const [dbStatus, setDbStatus] = useState<DbStatusResponse | null>(null);
@@ -65,10 +68,13 @@ function App() {
     setQuery(searchQuery);
     setAppState('loading');
     setError(null);
+    setResults([]);
 
     try {
-      const response = await search({ query: searchQuery });
-      setSearchResponse(response);
+      const response = await search({ query: searchQuery, limit: PAGE_SIZE });
+      setResults(response.results);
+      setTotalResults(response.totalResults);
+      setExecutionTime(response.executionTime);
 
       if (response.results.length === 0) {
         setAppState('no-results');
@@ -85,8 +91,41 @@ function App() {
     }
   }, []);
 
+  // Handle clear (Esc key)
+  const handleClear = useCallback(() => {
+    setQuery('');
+    setResults([]);
+    setTotalResults(0);
+    setExecutionTime(0);
+    setError(null);
+    setAppState('initial');
+  }, []);
+
+  // Handle load more
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || !query) return;
+
+    setIsLoadingMore(true);
+    try {
+      const response = await search({
+        query,
+        limit: PAGE_SIZE,
+        offset: results.length,
+      });
+      setResults((prev) => [...prev, ...response.results]);
+    } catch (err) {
+      // Silently fail on load more - user can try again
+      console.error('Failed to load more results:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [query, results.length, isLoadingMore]);
+
   // Get search terms for highlighting
   const searchTerms = query ? parseSearchTerms(query) : [];
+
+  // Check if there are more results to load
+  const hasMore = results.length < totalResults;
 
   return (
     <div className="app">
@@ -99,6 +138,7 @@ function App() {
         <div className="search-container">
           <SearchBar
             onSearch={handleSearch}
+            onClear={handleClear}
             isLoading={appState === 'loading'}
             initialQuery={query}
           />
@@ -122,13 +162,16 @@ function App() {
             <EmptyState type="error" errorMessage={error || undefined} />
           )}
 
-          {appState === 'results' && searchResponse && (
+          {appState === 'results' && (
             <SearchResults
-              results={searchResponse.results}
-              query={searchResponse.query}
-              totalResults={searchResponse.totalResults}
-              executionTime={searchResponse.executionTime}
+              results={results}
+              query={query}
+              totalResults={totalResults}
+              executionTime={executionTime}
               searchTerms={searchTerms}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              onLoadMore={handleLoadMore}
             />
           )}
         </div>

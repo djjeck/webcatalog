@@ -14,7 +14,7 @@ import type {
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+(globalThis as { fetch: typeof fetch }).fetch = mockFetch;
 
 describe('API Client', () => {
   beforeEach(() => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { StatusBar } from '../../src/components/StatusBar';
 import { formatBytes, formatLastUpdated } from '../../src/utils/format';

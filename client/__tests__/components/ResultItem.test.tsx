@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ResultItem } from '../../src/components/ResultItem';
 import {
@@ -7,9 +7,6 @@ import {
   highlightTerms,
 } from '../../src/utils/format';
 import type { SearchResultItem } from '../../src/types/api';
-
-// Global mock for clipboard
-const mockWriteText = vi.fn();
 
 describe('ResultItem', () => {
   const mockFileItem: SearchResultItem = {

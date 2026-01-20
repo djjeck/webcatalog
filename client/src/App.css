@@ -314,6 +314,40 @@
   font-size: 0.875rem;
 }
 
+.search-results-footer {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+  margin-top: 0.5rem;
+}
+
+.load-more-button {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  background-color: transparent;
+  border: 1px solid var(--color-accent);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.load-more-button:hover:not(:disabled) {
+  color: var(--color-bg-primary);
+  background-color: var(--color-accent);
+}
+
+.load-more-button:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.load-more-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ==========================================================================
    Result Item
    ========================================================================== */

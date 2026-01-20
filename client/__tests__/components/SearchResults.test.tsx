@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SearchResults } from '../../src/components/SearchResults';
 import type { SearchResultItem } from '../../src/types/api';
 
@@ -159,6 +160,107 @@ describe('SearchResults', () => {
       expect(screen.getByText('100 results found')).toBeInTheDocument();
       // But only one ResultItem is rendered
       expect(screen.getAllByTestId('result-item')).toHaveLength(1);
+    });
+  });
+
+  describe('load more', () => {
+    it('should show load more button when hasMore is true and onLoadMore is provided', () => {
+      const onLoadMore = vi.fn();
+      render(
+        <SearchResults
+          results={mockResults}
+          query="vacation"
+          totalResults={100}
+          executionTime={50}
+          hasMore={true}
+          onLoadMore={onLoadMore}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /Load more/ })).toBeInTheDocument();
+    });
+
+    it('should not show load more button when hasMore is false', () => {
+      const onLoadMore = vi.fn();
+      render(
+        <SearchResults
+          results={mockResults}
+          query="vacation"
+          totalResults={2}
+          executionTime={50}
+          hasMore={false}
+          onLoadMore={onLoadMore}
+        />
+      );
+
+      expect(screen.queryByRole('button', { name: /Load more/ })).not.toBeInTheDocument();
+    });
+
+    it('should not show load more button when onLoadMore is not provided', () => {
+      render(
+        <SearchResults
+          results={mockResults}
+          query="vacation"
+          totalResults={100}
+          executionTime={50}
+          hasMore={true}
+        />
+      );
+
+      expect(screen.queryByRole('button', { name: /Load more/ })).not.toBeInTheDocument();
+    });
+
+    it('should display current count and total in load more button', () => {
+      const onLoadMore = vi.fn();
+      render(
+        <SearchResults
+          results={mockResults}
+          query="vacation"
+          totalResults={100}
+          executionTime={50}
+          hasMore={true}
+          onLoadMore={onLoadMore}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: 'Load more (2 of 100)' })).toBeInTheDocument();
+    });
+
+    it('should call onLoadMore when button is clicked', async () => {
+      const user = userEvent.setup();
+      const onLoadMore = vi.fn();
+      render(
+        <SearchResults
+          results={mockResults}
+          query="vacation"
+          totalResults={100}
+          executionTime={50}
+          hasMore={true}
+          onLoadMore={onLoadMore}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /Load more/ }));
+      expect(onLoadMore).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show loading state and disable button when isLoadingMore is true', () => {
+      const onLoadMore = vi.fn();
+      render(
+        <SearchResults
+          results={mockResults}
+          query="vacation"
+          totalResults={100}
+          executionTime={50}
+          hasMore={true}
+          isLoadingMore={true}
+          onLoadMore={onLoadMore}
+        />
+      );
+
+      const button = screen.getByRole('button', { name: 'Loading...' });
+      expect(button).toBeInTheDocument();
+      expect(button).toBeDisabled();
     });
   });
 });

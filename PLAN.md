@@ -372,7 +372,7 @@ webcatalog/
    - Add hover states and focus indicators
    - Ensure accessibility (ARIA labels, keyboard navigation)
 
-⬜ **4.6 Advanced Features**
+✅ **4.6 Advanced Features**
    - Implement search term highlighting in results
    - Add keyboard shortcuts (Enter to search, Esc to clear)
    - Autofocus the input box on page load

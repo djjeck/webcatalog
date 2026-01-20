@@ -183,4 +183,56 @@ describe('SearchBar', () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe('autofocus', () => {
+    it('should focus input', () => {
+      const onSearch = vi.fn();
+      render(<SearchBar onSearch={onSearch} />);
+
+      const input = screen.getByPlaceholderText('Search files and folders...');
+      expect(input).toHaveFocus();
+    });
+  });
+
+  describe('escape key', () => {
+    it('should clear input and call onClear when pressing Escape', async () => {
+      const user = userEvent.setup();
+      const onSearch = vi.fn();
+      const onClear = vi.fn();
+      render(<SearchBar onSearch={onSearch} onClear={onClear} initialQuery="test" />);
+
+      const input = screen.getByPlaceholderText('Search files and folders...');
+      await user.click(input);
+      await user.keyboard('{Escape}');
+
+      expect(input).toHaveValue('');
+      expect(onClear).toHaveBeenCalledTimes(1);
+    });
+
+    it('should clear input without error when onClear is not provided', async () => {
+      const user = userEvent.setup();
+      const onSearch = vi.fn();
+      render(<SearchBar onSearch={onSearch} initialQuery="test" />);
+
+      const input = screen.getByPlaceholderText('Search files and folders...');
+      await user.click(input);
+      await user.keyboard('{Escape}');
+
+      expect(input).toHaveValue('');
+    });
+
+    it('should work with empty input', async () => {
+      const user = userEvent.setup();
+      const onSearch = vi.fn();
+      const onClear = vi.fn();
+      render(<SearchBar onSearch={onSearch} onClear={onClear} />);
+
+      const input = screen.getByPlaceholderText('Search files and folders...');
+      await user.click(input);
+      await user.keyboard('{Escape}');
+
+      expect(input).toHaveValue('');
+      expect(onClear).toHaveBeenCalledTimes(1);
+    });
+  });
 });

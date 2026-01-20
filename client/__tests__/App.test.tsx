@@ -130,9 +130,9 @@ describe('App', () => {
       await user.type(input, 'vacation photos');
       await user.click(screen.getByRole('button', { name: 'Search' }));
 
-      // Verify API was called correctly
+      // Verify API was called correctly (with pagination limit)
       await waitFor(() => {
-        expect(mockSearch).toHaveBeenCalledWith({ query: 'vacation photos' });
+        expect(mockSearch).toHaveBeenCalledWith({ query: 'vacation photos', limit: 50 });
       });
 
       // Verify results are displayed (detailed rendering tested in SearchResults unit tests)

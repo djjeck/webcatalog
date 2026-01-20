@@ -1,7 +1,16 @@
-import { useState, useCallback, type FormEvent, type ChangeEvent } from 'react';
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  type FormEvent,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from 'react';
 
 export interface SearchBarProps {
   onSearch: (query: string) => void;
+  onClear?: () => void;
   isLoading?: boolean;
   initialQuery?: string;
 }
@@ -12,11 +21,20 @@ export interface SearchBarProps {
  */
 export function SearchBar({
   onSearch,
+  onClear,
   isLoading = false,
   initialQuery = '',
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
   const [showHelp, setShowHelp] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Autofocus on mount
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  });
 
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
@@ -33,6 +51,16 @@ export function SearchBar({
     setQuery(e.target.value);
   }, []);
 
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Escape') {
+        setQuery('');
+        onClear?.();
+      }
+    },
+    [onClear]
+  );
+
   const toggleHelp = useCallback(() => {
     setShowHelp((prev) => !prev);
   }, []);
@@ -41,9 +69,11 @@ export function SearchBar({
     <div className="search-bar">
       <form onSubmit={handleSubmit} className="search-form">
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           placeholder="Search files and folders..."
           className="search-input"
           disabled={isLoading}

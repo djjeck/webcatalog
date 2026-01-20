@@ -7,6 +7,9 @@ export interface SearchResultsProps {
   totalResults: number;
   executionTime: number;
   searchTerms?: string[];
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 /**
@@ -18,6 +21,9 @@ export function SearchResults({
   totalResults,
   executionTime,
   searchTerms = [],
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: SearchResultsProps) {
   if (results.length === 0) {
     return (
@@ -35,16 +41,30 @@ export function SearchResults({
   return (
     <div className="search-results">
       <div className="search-results-header">
-        <span className="results-count">
+        <span className="search-results-count">
           {totalResults} result{totalResults !== 1 ? 's' : ''} found
         </span>
-        <span className="results-time">({executionTime.toFixed(0)}ms)</span>
+        <span className="search-results-time">
+          ({executionTime.toFixed(0)}ms)
+        </span>
       </div>
       <div className="search-results-list">
         {results.map((item) => (
           <ResultItem key={item.id} item={item} searchTerms={searchTerms} />
         ))}
       </div>
+      {hasMore && onLoadMore && (
+        <div className="search-results-footer">
+          <button
+            type="button"
+            className="load-more-button"
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? 'Loading...' : `Load more (${results.length} of ${totalResults})`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

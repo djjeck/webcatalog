@@ -364,7 +364,7 @@ webcatalog/
      - Test state transitions
    - Ensure >80% coverage
 
-⬜ **4.5 Styling**
+✅ **4.5 Styling**
    - Create responsive layout (mobile-first)
    - Style all components with CSS modules or styled-components
    - Implement loading spinner
@@ -374,9 +374,9 @@ webcatalog/
 
 ⬜ **4.6 Advanced Features**
    - Implement search term highlighting in results
-   - Copy file path to clipboard functionality
    - Add keyboard shortcuts (Enter to search, Esc to clear)
-   - Add result pagination or infinite scroll (if needed)
+   - Autofocus the input box on page load
+   - Add result pagination
    - Write tests for all features
    - Ensure >80% coverage
 
@@ -614,12 +614,12 @@ Since database updates are rare, use a simple on-demand approach:
 
 ## Environment Variables
 
-| Variable               | Description                          | Default            |
-| ---------------------- | ------------------------------------ | ------------------ |
+| Variable               | Description                          | Default               |
+| ---------------------- | ------------------------------------ | --------------------- |
 | `DB_PATH`              | Path to WinCatalog SQLite file       | `/data/catalog.w3cat` |
-| `PORT`                 | Server port                          | `3000`             |
-| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for nightly refresh      | `0` (midnight)     |
-| `NODE_ENV`             | Environment (development/production) | `production`       |
+| `PORT`                 | Server port                          | `3000`                |
+| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for nightly refresh      | `0` (midnight)        |
+| `NODE_ENV`             | Environment (development/production) | `production`          |
 
 ---
 

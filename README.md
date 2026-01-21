@@ -47,7 +47,7 @@ services:
     volumes:
       # Mount your WinCatalog database file (read-only)
       # Replace with your actual database path
-      - /path/to/your/catalog.w3cat:/data/catalog.w3cat:ro
+      - /path/to/your/My WinCatalog File.w3cat:/data/My WinCatalog File.w3cat:ro
     environment:
       - NIGHTLY_REFRESH_HOUR=0
       - PORT=3000
@@ -69,7 +69,7 @@ docker compose up -d
 docker run -d \
   --name webcatalog \
   -p 3000:3000 \
-  -v /path/to/your/catalog.w3cat:/data/catalog.w3cat:ro \
+  -v "/path/to/your/My WinCatalog File.w3cat:/data/My WinCatalog File.w3cat:ro" \
   --restart unless-stopped \
   djjeck/webcatalog:latest
 ```
@@ -141,14 +141,14 @@ All searches are case-insensitive and match partial words.
 
 ## Environment Variables
 
-| Variable               | Description                             | Default               |
-| ---------------------- | --------------------------------------- | --------------------- |
-| `DB_PATH`              | Path to WinCatalog `.w3cat` file        | `/data/catalog.w3cat` |
-| `PORT`                 | Server port                             | `3000`                |
-| `NODE_ENV`             | Environment (development/production)    | `production`          |
-| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload     | `0` (midnight)        |
-| `STATIC_PATH`          | Path to static files directory (the UI) | `./public`            |
-| `EXCLUDE_PATTERNS`     | Comma-separated patterns to exclude     | (none)                |
+| Variable               | Description                             | Default                          |
+| ---------------------- | --------------------------------------- | -------------------------------- |
+| `DB_PATH`              | Path to WinCatalog `.w3cat` file        | `/data/My WinCatalog File.w3cat` |
+| `PORT`                 | Server port                             | `3000`                           |
+| `NODE_ENV`             | Environment (development/production)    | `production`                     |
+| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload     | `0` (midnight)                   |
+| `STATIC_PATH`          | Path to static files directory (the UI) | `./public`                       |
+| `EXCLUDE_PATTERNS`     | Comma-separated patterns to exclude     | (none)                           |
 
 ### Exclude Patterns
 
@@ -260,7 +260,7 @@ docker compose restart
 4. Go to **Image** and launch the container
 5. Configure:
    - **Port**: Map local port 3000 to container port 3000
-   - **Volume**: Mount your `.w3cat` file to `/data/catalog.w3cat` (read-only)
+   - **Volume**: Mount your `.w3cat` file to `/data/My WinCatalog File.w3cat` (read-only)
    - **Environment**: Set `DB_PATH` if needed
 6. Start the container
 

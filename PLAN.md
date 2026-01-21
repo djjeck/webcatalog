@@ -612,12 +612,12 @@ Since database updates are rare, use a simple on-demand approach:
 
 ## Environment Variables
 
-| Variable               | Description                          | Default               |
-| ---------------------- | ------------------------------------ | --------------------- |
-| `DB_PATH`              | Path to WinCatalog SQLite file       | `/data/catalog.w3cat` |
-| `PORT`                 | Server port                          | `3000`                |
-| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for nightly refresh      | `0` (midnight)        |
-| `NODE_ENV`             | Environment (development/production) | `production`          |
+| Variable               | Description                          | Default                          |
+| ---------------------- | ------------------------------------ | -------------------------------- |
+| `DB_PATH`              | Path to WinCatalog SQLite file       | `/data/My WinCatalog File.w3cat` |
+| `PORT`                 | Server port                          | `3000`                           |
+| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for nightly refresh      | `0` (midnight)                   |
+| `NODE_ENV`             | Environment (development/production) | `production`                     |
 
 ---
 
@@ -625,7 +625,7 @@ Since database updates are rare, use a simple on-demand approach:
 
 ```yaml
 volumes:
-  - /path/to/wincatalog.w3cat:/data/catalog.w3cat:ro
+  - /path/to/My WinCatalog File.w3cat:/data/My WinCatalog File.w3cat:ro
 ```
 
 Note: `:ro` flag for read-only access

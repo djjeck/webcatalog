@@ -72,7 +72,7 @@ USER nodejs
 # Set environment variables (can be overridden at runtime)
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV DB_PATH=/data/catalog.w3cat
+ENV DB_PATH="/data/My WinCatalog File.w3cat"
 ENV STATIC_PATH=./public
 
 # Expose the default port (documentation only - actual port determined by PORT env var)

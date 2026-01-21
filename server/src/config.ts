@@ -33,7 +33,7 @@ export interface Config {
  * Default configuration values
  */
 const defaults = {
-  dbPath: '/data/catalog.w3cat',
+  dbPath: '/data/My WinCatalog File.w3cat',
   port: 3000,
   nightlyRefreshHour: 0,
   nodeEnv: 'development',

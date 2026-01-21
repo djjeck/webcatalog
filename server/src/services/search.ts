@@ -113,7 +113,7 @@ export function mapRowToSearchResult(row: RawSearchRow): SearchResultItem {
     id: row.id,
     name: row.file_name || row.name,
     path: buildPath(row),
-    size: row.size,
+    size: Number(row.size || '0'),
     dateModified: formatDate(row.date_change),
     dateCreated: formatDate(row.date_create),
     type: getItemType(row.itype),

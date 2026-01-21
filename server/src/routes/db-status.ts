@@ -35,15 +35,21 @@ router.get(
       .get() as { count: number };
 
     const filesCount = db
-      .prepare(`SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.FILE}`)
+      .prepare(
+        `SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.FILE}`
+      )
       .get() as { count: number };
 
     const foldersCount = db
-      .prepare(`SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.FOLDER}`)
+      .prepare(
+        `SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.FOLDER}`
+      )
       .get() as { count: number };
 
     const volumesCount = db
-      .prepare(`SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.VOLUME}`)
+      .prepare(
+        `SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.VOLUME}`
+      )
       .get() as { count: number };
 
     const totalSize = db

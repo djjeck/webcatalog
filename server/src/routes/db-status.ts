@@ -1,5 +1,7 @@
 /**
  * Database status route
+ *
+ * Queries the in-memory search_index table for statistics.
  */
 
 import { Router } from 'express';
@@ -9,6 +11,7 @@ import { getDatabase } from '../db/database.js';
 import { getLastReloadTime } from '../services/refresh.js';
 import type { DbStatusResponse } from '../types/api.js';
 import { asyncHandler } from '../middleware/errors.js';
+import { ItemType } from '../types/database.js';
 
 const router = Router();
 
@@ -26,29 +29,25 @@ router.get(
     // Get file stats
     const fileStats = await stat(dbPath);
 
-    // Get database statistics
+    // Get database statistics from the in-memory search_index table
     const itemsCount = db
-      .prepare('SELECT COUNT(*) as count FROM w3_items')
+      .prepare('SELECT COUNT(*) as count FROM search_index')
       .get() as { count: number };
 
     const filesCount = db
-      .prepare(
-        'SELECT COUNT(*) as count FROM w3_items WHERE itype NOT IN (1, 2, 3, 150, 172)'
-      )
+      .prepare(`SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.FILE}`)
       .get() as { count: number };
 
     const foldersCount = db
-      .prepare(
-        'SELECT COUNT(*) as count FROM w3_items WHERE itype IN (1, 2, 3)'
-      )
+      .prepare(`SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.FOLDER}`)
       .get() as { count: number };
 
     const volumesCount = db
-      .prepare('SELECT COUNT(*) as count FROM w3_items WHERE itype = 172')
+      .prepare(`SELECT COUNT(*) as count FROM search_index WHERE itype = ${ItemType.VOLUME}`)
       .get() as { count: number };
 
     const totalSize = db
-      .prepare('SELECT COALESCE(SUM(size), 0) as total FROM w3_fileInfo')
+      .prepare('SELECT COALESCE(SUM(size), 0) as total FROM search_index')
       .get() as { total: number };
 
     const lastReloadTime = getLastReloadTime();

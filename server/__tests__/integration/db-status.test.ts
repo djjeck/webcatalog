@@ -41,13 +41,14 @@ describe('GET /api/db-status', () => {
 
     mockDb = {
       prepare: vi.fn((sql: string) => {
-        if (sql.includes('COUNT(*)') && sql.includes('w3_items')) {
-          if (sql.includes('NOT IN')) {
-            return createMockStatement({ count: 1000 }); // files
-          } else if (sql.includes('IN (1, 2, 3)')) {
-            return createMockStatement({ count: 200 }); // folders
-          } else if (sql.includes('= 172')) {
-            return createMockStatement({ count: 5 }); // volumes
+        if (sql.includes('COUNT(*)') && sql.includes('search_index')) {
+          // Check more specific patterns first to avoid false matches
+          if (sql.includes('itype = 172')) {
+            return createMockStatement({ count: 5 }); // volumes (ItemType.VOLUME = 172)
+          } else if (sql.includes('itype = 200')) {
+            return createMockStatement({ count: 200 }); // folders (ItemType.FOLDER = 200)
+          } else if (sql.includes('itype = 1')) {
+            return createMockStatement({ count: 1000 }); // files (ItemType.FILE = 1)
           } else {
             return createMockStatement({ count: 1205 }); // total items
           }

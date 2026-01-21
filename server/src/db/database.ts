@@ -9,6 +9,15 @@ import { ItemType } from '../types/database.js';
  * that pre-computes all joins and path traversals at load time.
  * This moves expensive operations from query time (~200ms per keystroke)
  * to initialization time (~weeks between reloads).
+ *
+ * Supports exclude patterns to filter out files during indexing:
+ * - Filename patterns: "*.tmp", "Thumbs.db", ".*" (hidden files)
+ * - Directory patterns: "@eaDir/", "node_modules/" (excludes directory and all contents)
+ *
+ * Pattern format rules:
+ * - Patterns without "/" match against filenames only
+ * - Patterns ending with "/" or "/*" match directories in the path
+ * - Patterns with "/" in other positions are invalid and will be ignored with a warning
  */
 class DatabaseManager {
   private db: Database.Database | null = null;
@@ -65,8 +74,17 @@ class DatabaseManager {
       )
     `);
 
-    // Build exclude pattern conditions for the WHERE clause
-    const excludeConditions = this.buildExcludeConditions();
+    // Parse and categorize exclude patterns
+    const { filenamePatterns, directoryPatterns } =
+      this.parseExcludePatterns();
+
+    // Build exclude conditions for filename patterns (applied in base case)
+    const filenameExcludeConditions =
+      this.buildFilenameExcludeConditions(filenamePatterns);
+
+    // Build exclude conditions for directory patterns (applied after path computation)
+    const directoryExcludeConditions =
+      this.buildDirectoryExcludeConditions(directoryPatterns);
 
     // Populate with pre-computed data using the recursive CTE
     // This expensive operation runs once at init, not per-query
@@ -93,7 +111,7 @@ class DatabaseManager {
         LEFT JOIN source.w3_decent d ON i.id = d.id_item
         -- Exclude system items (catalog root, contacts, tags, etc.)
         WHERE i.itype IN (${ItemType.FILE}, ${ItemType.FOLDER}, ${ItemType.VOLUME})
-        ${excludeConditions}
+        ${filenameExcludeConditions}
 
         UNION ALL
 
@@ -154,6 +172,7 @@ class DatabaseManager {
       FROM best_paths bp
       LEFT JOIN source.w3_volumeInfo vi ON bp.volume_id = vi.id_item
       WHERE bp.rn = 1
+        ${directoryExcludeConditions}
     `;
 
     this.db.exec(insertSql);
@@ -165,19 +184,100 @@ class DatabaseManager {
   }
 
   /**
-   * Build SQL conditions to exclude patterns from indexing
+   * Validate and categorize exclude patterns.
+   *
+   * Pattern types:
+   * - Filename patterns: no "/" (e.g., "*.tmp", "Thumbs.db")
+   * - Directory patterns: ends with "/" or "/*" (e.g., "@eaDir/", "node_modules/*")
+   * - Invalid patterns: "/" in other positions (logged and ignored)
    */
-  private buildExcludeConditions(): string {
-    if (this.excludePatterns.length === 0) {
+  private parseExcludePatterns(): {
+    filenamePatterns: string[];
+    directoryPatterns: string[];
+  } {
+    const filenamePatterns: string[] = [];
+    const directoryPatterns: string[] = [];
+
+    for (const pattern of this.excludePatterns) {
+      // Check if pattern contains a slash
+      const slashIndex = pattern.indexOf('/');
+
+      if (slashIndex === -1) {
+        // No slash - filename pattern
+        filenamePatterns.push(pattern);
+      } else if (slashIndex === pattern.length - 1) {
+        // Ends with "/" - directory pattern (e.g., "@eaDir/")
+        directoryPatterns.push(pattern.slice(0, -1)); // Remove trailing /
+      } else if (
+        slashIndex === pattern.length - 2 &&
+        pattern.endsWith('/*')
+      ) {
+        // Ends with "/*" - directory pattern (e.g., "@eaDir/*")
+        directoryPatterns.push(pattern.slice(0, -2)); // Remove trailing /*
+      } else {
+        // Slash in invalid position
+        console.error(
+          `Invalid exclude pattern "${pattern}": slash (/) is only allowed at the end (e.g., "dirName/" or "dirName/*"). Pattern ignored.`
+        );
+      }
+    }
+
+    return { filenamePatterns, directoryPatterns };
+  }
+
+  /**
+   * Convert a glob pattern to SQL LIKE pattern
+   */
+  private globToSqlPattern(pattern: string): string {
+    let sqlPattern = pattern.replace(/[%_]/g, '\\$&');
+    sqlPattern = sqlPattern.replace(/\./g, '\\.');
+    sqlPattern = sqlPattern.replace(/\*/g, '%');
+    return sqlPattern;
+  }
+
+  /**
+   * Build SQL conditions to exclude filename patterns from indexing.
+   * Applied in the base case of the recursive CTE.
+   */
+  private buildFilenameExcludeConditions(
+    filenamePatterns: string[]
+  ): string {
+    if (filenamePatterns.length === 0) {
       return '';
     }
 
-    const conditions = this.excludePatterns.map((pattern) => {
-      // Convert glob pattern to SQL LIKE pattern
-      let sqlPattern = pattern.replace(/[%_]/g, '\\$&');
-      sqlPattern = sqlPattern.replace(/\./g, '\\.');
-      sqlPattern = sqlPattern.replace(/\*/g, '%');
+    const conditions = filenamePatterns.map((pattern) => {
+      const sqlPattern = this.globToSqlPattern(pattern);
       return `AND COALESCE(f.name, i.name) NOT LIKE '${sqlPattern}' ESCAPE '\\'`;
+    });
+
+    return conditions.join('\n        ');
+  }
+
+  /**
+   * Build SQL conditions to exclude directory patterns from final results.
+   * Applied after full_path is computed, excluding items within matched directories.
+   *
+   * For a directory pattern "dirName", we exclude:
+   * - The directory itself: full_path ends with "/dirName" or equals "dirName"
+   * - All contents: full_path contains "/dirName/"
+   */
+  private buildDirectoryExcludeConditions(
+    directoryPatterns: string[]
+  ): string {
+    if (directoryPatterns.length === 0) {
+      return '';
+    }
+
+    const conditions = directoryPatterns.map((dirName) => {
+      const sqlPattern = this.globToSqlPattern(dirName);
+      // Match: exactly the dir, ends with /dir, or contains /dir/
+      return `AND NOT (
+              bp.full_path = '${sqlPattern}'
+              OR bp.full_path LIKE '%/${sqlPattern}' ESCAPE '\\'
+              OR bp.full_path LIKE '%/${sqlPattern}/%' ESCAPE '\\'
+              OR bp.full_path LIKE '${sqlPattern}/%' ESCAPE '\\'
+            )`;
     });
 
     return conditions.join('\n        ');

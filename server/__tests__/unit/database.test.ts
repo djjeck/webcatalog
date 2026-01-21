@@ -240,4 +240,52 @@ describe('Database Manager', () => {
       expect(lastModified).toBe(3000000);
     });
   });
+
+  describe('exclude pattern validation', () => {
+    it('should log error for invalid pattern with slash in middle', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Pattern with slash in the middle is invalid
+      await initDatabase(mockDbPath, ['foo/bar/baz']);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid exclude pattern')
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('foo/bar/baz')
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should not log error for valid filename pattern', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await initDatabase(mockDbPath, ['*.txt']);
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should not log error for valid directory pattern with trailing slash', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await initDatabase(mockDbPath, ['@eaDir/']);
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should not log error for valid directory pattern with trailing /*', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await initDatabase(mockDbPath, ['node_modules/*']);
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+  });
 });

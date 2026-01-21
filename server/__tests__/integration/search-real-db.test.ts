@@ -435,17 +435,123 @@ describe('Exclude patterns integration tests', () => {
     });
   });
 
-  describe('exclude by directory pattern (@eaDir/*)', () => {
+  describe('exclude by directory pattern with /* suffix', () => {
     beforeEach(async () => {
-      // This pattern would exclude files in @eaDir directories
-      // Our test database doesn't have @eaDir, but we verify the pattern doesn't break anything
-      await initDatabase(TEST_DB_PATH, ['@eaDir/*']);
+      // Exclude the .hidden_dir directory and all its contents
+      await initDatabase(TEST_DB_PATH, ['.hidden_dir/*']);
+    });
+
+    it('should not find files inside excluded directory', () => {
+      // secret.txt is inside .hidden_dir
+      const results = executeTestSearch('secret');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find the excluded directory itself', () => {
+      const results = executeTestSearch('.hidden_dir');
+      expect(results.length).toBe(0);
+    });
+
+    it('should still find files outside the excluded directory', () => {
+      const results = executeTestSearch('config');
+      expect(results.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('exclude by directory pattern with / suffix', () => {
+    beforeEach(async () => {
+      // Exclude the deep directory and all nested contents
+      await initDatabase(TEST_DB_PATH, ['deep/']);
+    });
+
+    it('should not find deeply nested files', () => {
+      // deep_file.txt is inside deep/level_1/level_2/level_3/
+      const results = executeTestSearch('deep_file');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find intermediate directories', () => {
+      const results = executeTestSearch('level_1');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find the excluded directory itself', () => {
+      const results = executeTestSearch('deep');
+      // Should not find the "deep" folder
+      const names = results.map((r) => r.file_name || r.name);
+      expect(names).not.toContain('deep');
+    });
+
+    it('should still find other files', () => {
+      const results = executeTestSearch('.txt');
+      // Should find other .txt files but not deep_file.txt
+      const names = results.map((r) => r.file_name || r.name);
+      expect(names).not.toContain('deep_file.txt');
+      expect(names).toContain('secret.txt');
+    });
+  });
+
+  describe('exclude directory pattern for @eaDir (Synology NAS)', () => {
+    beforeEach(async () => {
+      // @eaDir/ is a standard Synology NAS system directory
+      // Our test database doesn't have @eaDir, but we verify the pattern works
+      await initDatabase(TEST_DB_PATH, ['@eaDir/']);
     });
 
     it('should still find all normal files when excluding non-existent directory', () => {
       const results = executeTestSearch('.txt');
       // Should find all 4 .txt files since @eaDir doesn't exist in test data
       expect(results.length).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  describe('exclude multiple directories', () => {
+    beforeEach(async () => {
+      // Exclude multiple directories
+      await initDatabase(TEST_DB_PATH, ['.hidden_dir/', 'special_chars/']);
+    });
+
+    it('should not find files in first excluded directory', () => {
+      const results = executeTestSearch('secret');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find files in second excluded directory', () => {
+      // special_chars contains: file with spaces.log, study_guide.v1.2.md, ⚡_energy_⚡.txt
+      const logResults = executeTestSearch('"file with spaces"');
+      const mdResults = executeTestSearch('study_guide');
+      const emojiResults = executeTestSearch('energy');
+
+      expect(logResults.length).toBe(0);
+      expect(mdResults.length).toBe(0);
+      expect(emojiResults.length).toBe(0);
+    });
+
+    it('should still find files in non-excluded directories', () => {
+      const results = executeTestSearch('unique.conf');
+      expect(results.length).toBe(4);
+    });
+  });
+
+  describe('mixed filename and directory patterns', () => {
+    beforeEach(async () => {
+      // Mix of filename pattern (*.conf) and directory pattern (deep/)
+      await initDatabase(TEST_DB_PATH, ['*.conf', 'deep/']);
+    });
+
+    it('should not find .conf files (filename pattern)', () => {
+      const results = executeTestSearch('unique.conf');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find files in excluded directory (directory pattern)', () => {
+      const results = executeTestSearch('deep_file');
+      expect(results.length).toBe(0);
+    });
+
+    it('should still find other files', () => {
+      const results = executeTestSearch('config');
+      expect(results.length).toBeGreaterThan(0);
     });
   });
 

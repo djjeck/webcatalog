@@ -278,7 +278,7 @@ describe('mapRowToSearchResult', () => {
       id: 123,
       name: 'folder_item',
       path: 'folder_item',
-      size: null,
+      size: 0, // null converts to 0 via Number(null || '0')
       dateModified: null,
       dateCreated: null,
       type: 'folder',

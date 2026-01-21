@@ -35,7 +35,7 @@ describe('Config Module', () => {
 
       const config = loadConfig();
 
-      expect(config.dbPath).toBe('/data/catalog.w3cat');
+      expect(config.dbPath).toBe('/data/My WinCatalog File.w3cat');
       expect(config.port).toBe(3000);
       expect(config.nightlyRefreshHour).toBe(0);
       expect(config.nodeEnv).toBe('development');

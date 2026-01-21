@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   parseSearchQuery,
   buildLikePattern,
+  globToLikePattern,
   buildSearchWhereClause,
   buildSearchQuery,
   type SearchTerm,
@@ -122,16 +123,54 @@ describe('buildLikePattern', () => {
   });
 });
 
+describe('globToLikePattern', () => {
+  it('should convert * to %', () => {
+    expect(globToLikePattern('*.tmp')).toBe('%\\.tmp');
+  });
+
+  it('should handle multiple wildcards', () => {
+    expect(globToLikePattern('*test*')).toBe('%test%');
+  });
+
+  it('should escape dots', () => {
+    expect(globToLikePattern('file.txt')).toBe('file\\.txt');
+  });
+
+  it('should escape SQL % character', () => {
+    expect(globToLikePattern('test%file')).toBe('test\\%file');
+  });
+
+  it('should escape SQL _ character', () => {
+    expect(globToLikePattern('test_file')).toBe('test\\_file');
+  });
+
+  it('should handle directory patterns', () => {
+    expect(globToLikePattern('@eaDir/*')).toBe('@eaDir/%');
+  });
+
+  it('should handle exact filename', () => {
+    expect(globToLikePattern('Thumbs.db')).toBe('Thumbs\\.db');
+  });
+
+  it('should handle complex pattern', () => {
+    expect(globToLikePattern('*.tmp.*')).toBe('%\\.tmp\\.%');
+  });
+
+  it('should handle empty string', () => {
+    expect(globToLikePattern('')).toBe('');
+  });
+});
+
 describe('buildSearchWhereClause', () => {
   it('should return 1=1 for empty terms', () => {
-    const result = buildSearchWhereClause([]);
+    const result = buildSearchWhereClause([], []);
     expect(result.clause).toBe('1=1');
     expect(result.params).toEqual([]);
   });
 
   it('should build clause for single term', () => {
     const terms: SearchTerm[] = [{ value: 'vacation', isPhrase: false }];
-    const result = buildSearchWhereClause(terms);
+    const result = buildSearchWhereClause(terms, []);
 
     expect(result.clause).toBe(
       '(w3_items.name LIKE ? COLLATE NOCASE OR w3_fileInfo.name LIKE ? COLLATE NOCASE)'
@@ -144,7 +183,7 @@ describe('buildSearchWhereClause', () => {
       { value: 'vacation', isPhrase: false },
       { value: 'photos', isPhrase: false },
     ];
-    const result = buildSearchWhereClause(terms);
+    const result = buildSearchWhereClause(terms, []);
 
     expect(result.clause).toBe(
       '(w3_items.name LIKE ? COLLATE NOCASE OR w3_fileInfo.name LIKE ? COLLATE NOCASE) AND ' +
@@ -160,7 +199,7 @@ describe('buildSearchWhereClause', () => {
 
   it('should build clause for quoted phrase', () => {
     const terms: SearchTerm[] = [{ value: 'summer vacation', isPhrase: true }];
-    const result = buildSearchWhereClause(terms);
+    const result = buildSearchWhereClause(terms, []);
 
     expect(result.clause).toBe(
       '(w3_items.name LIKE ? COLLATE NOCASE OR w3_fileInfo.name LIKE ? COLLATE NOCASE)'
@@ -170,7 +209,7 @@ describe('buildSearchWhereClause', () => {
 
   it('should escape special SQL characters in params', () => {
     const terms: SearchTerm[] = [{ value: 'test%_file', isPhrase: false }];
-    const result = buildSearchWhereClause(terms);
+    const result = buildSearchWhereClause(terms, []);
 
     expect(result.params).toEqual(['%test\\%\\_file%', '%test\\%\\_file%']);
   });
@@ -178,7 +217,7 @@ describe('buildSearchWhereClause', () => {
 
 describe('buildSearchQuery', () => {
   it('should build complete SQL query for single term', () => {
-    const result = buildSearchQuery('vacation');
+    const result = buildSearchQuery('vacation', []);
 
     expect(result.sql).toContain('SELECT');
     expect(result.sql).toContain('FROM w3_items');
@@ -191,7 +230,7 @@ describe('buildSearchQuery', () => {
   });
 
   it('should build query for multiple terms', () => {
-    const result = buildSearchQuery('vacation photos');
+    const result = buildSearchQuery('vacation photos', []);
 
     expect(result.sql).toContain('AND');
     expect(result.params).toEqual([
@@ -203,13 +242,13 @@ describe('buildSearchQuery', () => {
   });
 
   it('should build query for quoted phrase', () => {
-    const result = buildSearchQuery('"summer vacation"');
+    const result = buildSearchQuery('"summer vacation"', []);
 
     expect(result.params).toEqual(['%summer vacation%', '%summer vacation%']);
   });
 
   it('should build query for mixed terms and phrases', () => {
-    const result = buildSearchQuery('vacation "summer 2024" photos');
+    const result = buildSearchQuery('vacation "summer 2024" photos', []);
 
     expect(result.params).toEqual([
       '%vacation%',
@@ -222,14 +261,14 @@ describe('buildSearchQuery', () => {
   });
 
   it('should build query with 1=1 for empty search', () => {
-    const result = buildSearchQuery('');
+    const result = buildSearchQuery('', []);
 
     expect(result.sql).toContain('WHERE 1=1');
     expect(result.params).toEqual([]);
   });
 
   it('should select all necessary columns', () => {
-    const result = buildSearchQuery('test');
+    const result = buildSearchQuery('test', []);
 
     // Columns selected in search_results CTE
     expect(result.sql).toContain('w3_items.id');
@@ -256,7 +295,7 @@ describe('buildSearchQuery', () => {
     ];
 
     for (const input of maliciousInputs) {
-      const result = buildSearchQuery(input);
+      const result = buildSearchQuery(input, []);
 
       // Should be safely escaped in parameters
       expect(result.params.length).toBeGreaterThan(0);
@@ -270,7 +309,7 @@ describe('buildSearchQuery', () => {
     const edgeCases = ['   ', '""""', '" "', '   "   "   '];
 
     for (const input of edgeCases) {
-      const result = buildSearchQuery(input);
+      const result = buildSearchQuery(input, []);
 
       // Should handle gracefully without errors
       expect(result.sql).toBeDefined();

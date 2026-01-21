@@ -9,9 +9,11 @@ class DatabaseManager {
   private db: Database.Database | null = null;
   private dbPath: string;
   private lastModified: number = 0;
+  public readonly excludePatterns: string[];
 
-  constructor(dbPath: string) {
+  constructor(dbPath: string, excludePatterns: string[]) {
     this.dbPath = dbPath;
+    this.excludePatterns = excludePatterns;
   }
 
   /**
@@ -107,11 +109,14 @@ let dbManager: DatabaseManager | null = null;
 /**
  * Initialize the database manager singleton
  */
-export async function initDatabase(dbPath: string): Promise<void> {
+export async function initDatabase(
+  dbPath: string,
+  excludePatterns: string[]
+): Promise<void> {
   if (dbManager) {
     dbManager.close();
   }
-  dbManager = new DatabaseManager(dbPath);
+  dbManager = new DatabaseManager(dbPath, excludePatterns);
   await dbManager.init();
 }
 

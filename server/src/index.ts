@@ -48,7 +48,7 @@ async function initialize(): Promise<void> {
 
   // Initialize database
   console.log(`Initializing database from: ${config.dbPath}`);
-  await initDatabase(config.dbPath);
+  await initDatabase(config.dbPath, config.excludePatterns);
   console.log('Database initialized successfully');
 
   // Schedule nightly refresh

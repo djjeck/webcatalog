@@ -25,6 +25,8 @@ export interface Config {
   staticPath: string;
   /** Whether to serve static files */
   serveStatic: boolean;
+  /** Patterns to exclude from search results (glob-like patterns) */
+  excludePatterns: string[];
 }
 
 /**
@@ -70,6 +72,20 @@ function parseRefreshHour(value: string | undefined): number {
 }
 
 /**
+ * Parse comma-separated exclude patterns from environment variable
+ * Patterns support glob-like wildcards: * matches any characters
+ */
+function parseExcludePatterns(value: string | undefined): string[] {
+  if (!value || value.trim() === '') {
+    return [];
+  }
+  return value
+    .split(',')
+    .map((pattern) => pattern.trim())
+    .filter((pattern) => pattern !== '');
+}
+
+/**
  * Load configuration from environment variables
  */
 export function loadConfig(): Config {
@@ -91,6 +107,7 @@ export function loadConfig(): Config {
     isTest: nodeEnv === 'test',
     staticPath,
     serveStatic,
+    excludePatterns: parseExcludePatterns(process.env.EXCLUDE_PATTERNS),
   };
 }
 

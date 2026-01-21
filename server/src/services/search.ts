@@ -140,10 +140,12 @@ export async function executeSearch(
   await checkAndReloadIfChanged();
 
   // Get database instance
-  const db = getDatabase().getDb();
+  const dbManager = getDatabase();
+  const db = dbManager.getDb();
+  const excludePatterns = dbManager.excludePatterns;
 
   // Build search query
-  const { sql, params } = buildSearchQuery(query);
+  const { sql, params } = buildSearchQuery(query, excludePatterns);
 
   // Add LIMIT and OFFSET to query
   const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
@@ -172,10 +174,12 @@ export async function executeSearch(
  * Useful for pagination information
  */
 export async function getSearchCount(query: string): Promise<number> {
+  // Get database instance
   const dbManager = getDatabase();
   const db = dbManager.getDb();
+  const excludePatterns = dbManager.excludePatterns;
 
-  const { sql, params } = buildSearchQuery(query);
+  const { sql, params } = buildSearchQuery(query, excludePatterns);
 
   // Wrap query to count results
   const countSql = `SELECT COUNT(*) as count FROM (${sql})`;

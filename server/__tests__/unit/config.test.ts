@@ -31,6 +31,7 @@ describe('Config Module', () => {
       delete process.env.NODE_ENV;
       delete process.env.STATIC_PATH;
       delete process.env.SERVE_STATIC;
+      delete process.env.EXCLUDE_PATTERNS;
 
       const config = loadConfig();
 
@@ -40,6 +41,7 @@ describe('Config Module', () => {
       expect(config.nodeEnv).toBe('development');
       expect(config.staticPath).toBe('./public');
       expect(config.serveStatic).toBe(false); // false in development by default
+      expect(config.excludePatterns).toEqual([]);
     });
 
     it('should read DB_PATH from environment', () => {
@@ -187,6 +189,46 @@ describe('Config Module', () => {
 
       expect(config.nightlyRefreshHour).toBe(0);
     });
+
+    it('should parse EXCLUDE_PATTERNS as comma-separated list', () => {
+      process.env.EXCLUDE_PATTERNS = '*.tmp,@eaDir/*,Thumbs.db';
+
+      const config = loadConfig();
+
+      expect(config.excludePatterns).toEqual(['*.tmp', '@eaDir/*', 'Thumbs.db']);
+    });
+
+    it('should handle single EXCLUDE_PATTERNS value', () => {
+      process.env.EXCLUDE_PATTERNS = '*.tmp';
+
+      const config = loadConfig();
+
+      expect(config.excludePatterns).toEqual(['*.tmp']);
+    });
+
+    it('should return empty array for empty EXCLUDE_PATTERNS', () => {
+      process.env.EXCLUDE_PATTERNS = '';
+
+      const config = loadConfig();
+
+      expect(config.excludePatterns).toEqual([]);
+    });
+
+    it('should trim whitespace from EXCLUDE_PATTERNS', () => {
+      process.env.EXCLUDE_PATTERNS = ' *.tmp , @eaDir/* , Thumbs.db ';
+
+      const config = loadConfig();
+
+      expect(config.excludePatterns).toEqual(['*.tmp', '@eaDir/*', 'Thumbs.db']);
+    });
+
+    it('should filter out empty patterns from EXCLUDE_PATTERNS', () => {
+      process.env.EXCLUDE_PATTERNS = '*.tmp,,@eaDir/*';
+
+      const config = loadConfig();
+
+      expect(config.excludePatterns).toEqual(['*.tmp', '@eaDir/*']);
+    });
   });
 
   describe('validateConfig', () => {
@@ -201,6 +243,7 @@ describe('Config Module', () => {
         isTest: false,
         staticPath: './public',
         serveStatic: false,
+        excludePatterns: [],
       };
 
       const errors = validateConfig(config);
@@ -219,6 +262,7 @@ describe('Config Module', () => {
         isTest: false,
         staticPath: './public',
         serveStatic: false,
+        excludePatterns: [],
       };
 
       const errors = validateConfig(config);
@@ -238,6 +282,7 @@ describe('Config Module', () => {
         isTest: false,
         staticPath: './public',
         serveStatic: false,
+        excludePatterns: [],
       };
 
       const errors = validateConfig(config);
@@ -257,6 +302,7 @@ describe('Config Module', () => {
         isTest: false,
         staticPath: './public',
         serveStatic: false,
+        excludePatterns: [],
       };
 
       const configHigh: Config = {
@@ -269,6 +315,7 @@ describe('Config Module', () => {
         isTest: false,
         staticPath: './public',
         serveStatic: false,
+        excludePatterns: [],
       };
 
       expect(validateConfig(configLow)).toEqual([]);
@@ -286,6 +333,7 @@ describe('Config Module', () => {
         isTest: false,
         staticPath: './public',
         serveStatic: true,
+        excludePatterns: [],
       };
 
       const errors = validateConfig(config);

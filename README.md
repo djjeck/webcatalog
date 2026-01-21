@@ -51,6 +51,8 @@ services:
     environment:
       - NIGHTLY_REFRESH_HOUR=0
       - PORT=3000
+      # Optional: exclude system/temp files from search results
+      - EXCLUDE_PATTERNS=*.tmp,Thumbs.db,.DS_Store
     restart: unless-stopped
 ```
 
@@ -146,6 +148,25 @@ All searches are case-insensitive and match partial words.
 | `NODE_ENV`             | Environment (development/production)    | `production`          |
 | `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload     | `0` (midnight)        |
 | `STATIC_PATH`          | Path to static files directory (the UI) | `./public`            |
+| `EXCLUDE_PATTERNS`     | Comma-separated patterns to exclude     | (none)                |
+
+### Exclude Patterns
+
+The `EXCLUDE_PATTERNS` environment variable allows you to filter out files from search results based on filename patterns. This is useful for excluding system files, temporary files, or NAS-specific metadata.
+
+**Pattern Syntax:**
+- `*` matches any characters (like a glob wildcard)
+- Patterns are matched against filenames only (not full paths)
+- Multiple patterns are separated by commas
+
+**Examples:**
+```bash
+# Exclude common system/temp files
+EXCLUDE_PATTERNS="*.tmp,Thumbs.db,.DS_Store"
+
+# Exclude Synology NAS metadata
+EXCLUDE_PATTERNS="@eaDir/*,#recycle/*"
+```
 
 ## Database Schema
 

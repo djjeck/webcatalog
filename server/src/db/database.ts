@@ -75,8 +75,7 @@ class DatabaseManager {
     `);
 
     // Parse and categorize exclude patterns
-    const { filenamePatterns, directoryPatterns } =
-      this.parseExcludePatterns();
+    const { filenamePatterns, directoryPatterns } = this.parseExcludePatterns();
 
     // Build exclude conditions for filename patterns (applied in base case)
     const filenameExcludeConditions =
@@ -208,10 +207,7 @@ class DatabaseManager {
       } else if (slashIndex === pattern.length - 1) {
         // Ends with "/" - directory pattern (e.g., "@eaDir/")
         directoryPatterns.push(pattern.slice(0, -1)); // Remove trailing /
-      } else if (
-        slashIndex === pattern.length - 2 &&
-        pattern.endsWith('/*')
-      ) {
+      } else if (slashIndex === pattern.length - 2 && pattern.endsWith('/*')) {
         // Ends with "/*" - directory pattern (e.g., "@eaDir/*")
         directoryPatterns.push(pattern.slice(0, -2)); // Remove trailing /*
       } else {
@@ -239,9 +235,7 @@ class DatabaseManager {
    * Build SQL conditions to exclude filename patterns from indexing.
    * Applied in the base case of the recursive CTE.
    */
-  private buildFilenameExcludeConditions(
-    filenamePatterns: string[]
-  ): string {
+  private buildFilenameExcludeConditions(filenamePatterns: string[]): string {
     if (filenamePatterns.length === 0) {
       return '';
     }
@@ -262,9 +256,7 @@ class DatabaseManager {
    * - The directory itself: full_path ends with "/dirName" or equals "dirName"
    * - All contents: full_path contains "/dirName/"
    */
-  private buildDirectoryExcludeConditions(
-    directoryPatterns: string[]
-  ): string {
+  private buildDirectoryExcludeConditions(directoryPatterns: string[]): string {
     if (directoryPatterns.length === 0) {
       return '';
     }

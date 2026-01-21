@@ -94,24 +94,26 @@ describe('Search against real test database', () => {
   });
 
   describe('duplicate filenames - search "unique.conf"', () => {
-    it('should find all 4 unique.conf files (2 per root, in sub_a and sub_b)', () => {
+    it('should find all 6 unique.conf files', () => {
       const results = executeTestSearch('unique.conf');
 
-      // Database has 4 unique.conf files:
+      // Database has 6 unique.conf files:
       // root_1/duplicate_names/sub_a/unique.conf
       // root_1/duplicate_names/sub_b/unique.conf
       // root_2/duplicate_names/sub_a/unique.conf
       // root_2/duplicate_names/sub_b/unique.conf
-      expect(results.length).toBe(4);
+      // root_2/duplicate_names/@eaDir/sub_a/unique.conf
+      // root_2/duplicate_names/@eaDir/sub_b/unique.conf
+      expect(results.length).toBe(6);
     });
 
     it('should have full_path with different directories for each unique.conf', () => {
       const results = executeTestSearch('unique.conf');
       const paths = results.map((r) => r.full_path);
 
-      // All 4 files should have different full paths
+      // All 6 files should have different full paths
       const uniquePaths = new Set(paths);
-      expect(uniquePaths.size).toBe(4);
+      expect(uniquePaths.size).toBe(6);
 
       // Verify paths include sub_a and sub_b in different roots
       const hasRoot1SubA = paths.some(
@@ -411,7 +413,7 @@ describe('Exclude patterns integration tests', () => {
 
     it('should still find .conf files', () => {
       const results = executeTestSearch('unique.conf');
-      expect(results.length).toBe(4);
+      expect(results.length).toBe(6);
     });
   });
 
@@ -491,17 +493,107 @@ describe('Exclude patterns integration tests', () => {
     });
   });
 
-  describe('exclude directory pattern for @eaDir (Synology NAS)', () => {
-    beforeEach(async () => {
-      // @eaDir/ is a standard Synology NAS system directory
-      // Our test database doesn't have @eaDir, but we verify the pattern works
-      await initDatabase(TEST_DB_PATH, ['@eaDir/']);
+  describe('exclude @eaDir directory (Synology NAS system directory)', () => {
+    it('should find @eaDir contents when not excluded', async () => {
+      // First verify @eaDir and its contents exist in the test database
+      await initDatabase(TEST_DB_PATH, []);
+
+      // @eaDir directory itself
+      const eaDirResults = executeTestSearch('@eaDir');
+      expect(eaDirResults.length).toBe(1);
+
+      // unique.conf files - should be 6 total:
+      // 4 in root_1 and root_2 duplicate_names (outside @eaDir)
+      // 2 in root_2/duplicate_names/@eaDir/sub_a and sub_b
+      const confResults = executeTestSearch('unique.conf');
+      expect(confResults.length).toBe(6);
     });
 
-    it('should still find all normal files when excluding non-existent directory', () => {
-      const results = executeTestSearch('.txt');
-      // Should find all 4 .txt files since @eaDir doesn't exist in test data
-      expect(results.length).toBeGreaterThanOrEqual(4);
+    it('should not find @eaDir directory when excluded', async () => {
+      await initDatabase(TEST_DB_PATH, ['@eaDir/']);
+
+      const results = executeTestSearch('@eaDir');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find files inside @eaDir when excluded', async () => {
+      await initDatabase(TEST_DB_PATH, ['@eaDir/']);
+
+      // Should only find 4 unique.conf files (not the 2 inside @eaDir)
+      const confResults = executeTestSearch('unique.conf');
+      expect(confResults.length).toBe(4);
+
+      // Verify none of the results are from @eaDir
+      const paths = confResults.map((r) => r.full_path);
+      const hasEaDir = paths.some((p) => p?.includes('@eaDir'));
+      expect(hasEaDir).toBe(false);
+    });
+
+    it('should not find nested directories inside @eaDir when excluded', async () => {
+      await initDatabase(TEST_DB_PATH, ['@eaDir/']);
+
+      // sub_a and sub_b exist both inside and outside @eaDir
+      // When @eaDir is excluded, we should still find the ones outside
+      const subAResults = executeTestSearch('sub_a');
+      const subBResults = executeTestSearch('sub_b');
+
+      // Verify none are inside @eaDir
+      for (const result of [...subAResults, ...subBResults]) {
+        expect(result.full_path).not.toContain('@eaDir');
+      }
+    });
+  });
+
+  describe('exclude .DS_Store files (macOS system files)', () => {
+    it('should find .DS_Store when not excluded', async () => {
+      await initDatabase(TEST_DB_PATH, []);
+
+      const results = executeTestSearch('.DS_Store');
+      expect(results.length).toBe(1);
+      expect(results[0].full_path).toBe('root_2/duplicate_names/.DS_Store');
+    });
+
+    it('should not find .DS_Store when excluded', async () => {
+      await initDatabase(TEST_DB_PATH, ['.DS_Store']);
+
+      const results = executeTestSearch('.DS_Store');
+      expect(results.length).toBe(0);
+    });
+
+    it('should still find other files when .DS_Store is excluded', async () => {
+      await initDatabase(TEST_DB_PATH, ['.DS_Store']);
+
+      const results = executeTestSearch('unique.conf');
+      expect(results.length).toBe(6);
+    });
+  });
+
+  describe('exclude both @eaDir and .DS_Store (common NAS exclusions)', () => {
+    beforeEach(async () => {
+      // Common pattern for Synology NAS users
+      await initDatabase(TEST_DB_PATH, ['@eaDir/', '.DS_Store']);
+    });
+
+    it('should not find @eaDir directory or contents', () => {
+      const eaDirResults = executeTestSearch('@eaDir');
+      expect(eaDirResults.length).toBe(0);
+
+      // Only 4 unique.conf files (not the 2 inside @eaDir)
+      const confResults = executeTestSearch('unique.conf');
+      expect(confResults.length).toBe(4);
+    });
+
+    it('should not find .DS_Store files', () => {
+      const results = executeTestSearch('.DS_Store');
+      expect(results.length).toBe(0);
+    });
+
+    it('should still find all other files', () => {
+      const configResults = executeTestSearch('config');
+      expect(configResults.length).toBeGreaterThan(0);
+
+      const txtResults = executeTestSearch('.txt');
+      expect(txtResults.length).toBeGreaterThanOrEqual(4);
     });
   });
 
@@ -529,7 +621,7 @@ describe('Exclude patterns integration tests', () => {
 
     it('should still find files in non-excluded directories', () => {
       const results = executeTestSearch('unique.conf');
-      expect(results.length).toBe(4);
+      expect(results.length).toBe(6);
     });
   });
 

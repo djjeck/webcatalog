@@ -41,7 +41,7 @@ root_1/
 
 root_2/
 ├── duplicate_names/            # Same filename, different volume
-│   ├── @eaDir/
+│   ├── @eaDir/                 # Directory to be excluded
 │   │   ├── sub_a/
 │   │   │   └── unique.conf
 │   │   └── sub_b/
@@ -50,7 +50,7 @@ root_2/
 │   │   └── unique.conf
 │   ├── sub_b/
 │   │   └── unique.conf
-|   └── .DS_Store
+│   └── .DS_Store               # File to be excluded
 └── config                      # Regular file at root
 EOF
 )

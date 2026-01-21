@@ -1,6 +1,8 @@
 /**
  * Search query builder for WinCatalog database
  * Handles parsing search terms and building SQL queries
+ *
+ * Queries against the pre-computed search_index table for fast searches.
  */
 
 export interface SearchTerm {
@@ -76,11 +78,10 @@ export function globToLikePattern(pattern: string): string {
 /**
  * Build SQL WHERE clause for search terms
  * Returns clause and parameters for prepared statement
+ *
+ * Searches against the flattened search_index table (single column: name)
  */
-export function buildSearchWhereClause(
-  terms: SearchTerm[],
-  excludePatterns: string[]
-): {
+export function buildSearchWhereClause(terms: SearchTerm[]): {
   clause: string;
   params: string[];
 } {
@@ -92,22 +93,10 @@ export function buildSearchWhereClause(
   const params: string[] = [];
 
   for (const term of terms) {
-    // Search in both w3_items.name and w3_fileInfo.name
-    conditions.push(
-      `(w3_items.name LIKE ? COLLATE NOCASE OR w3_fileInfo.name LIKE ? COLLATE NOCASE)`
-    );
+    // Search only in the name column of the flattened search_index
+    conditions.push(`name LIKE ? ESCAPE '\\' COLLATE NOCASE`);
     const pattern = buildLikePattern(term.value);
-    // Add pattern twice, for two params
-    params.push(pattern, pattern);
-  }
-
-  for (const excludePattern of excludePatterns) {
-    conditions.push(
-      `(w3_items.name NOT LIKE ? COLLATE NOCASE AND w3_fileInfo.name NOT LIKE ? COLLATE NOCASE)`
-    );
-    const pattern = globToLikePattern(excludePattern);
-    // Add pattern twice, for two params
-    params.push(pattern, pattern);
+    params.push(pattern);
   }
 
   // Combine all conditions with AND (all terms must match)
@@ -118,92 +107,32 @@ export function buildSearchWhereClause(
 
 /**
  * Build complete search query SQL
- * Joins necessary tables and applies search conditions
- *
- * Uses a recursive CTE to walk up the parent tree to find the volume ancestor,
- * since volume info is only stored on volume items (itype=172), not on files/folders.
- * Also builds the full path by collecting ancestor names.
+ * Queries the pre-computed search_index table directly.
  */
-export function buildSearchQuery(
-  searchString: string,
-  excludePatterns: string[]
-): {
+export function buildSearchQuery(searchString: string): {
   sql: string;
   params: string[];
 } {
   const terms = parseSearchQuery(searchString);
-  const { clause, params } = buildSearchWhereClause(terms, excludePatterns);
+  const { clause, params } = buildSearchWhereClause(terms);
 
-  // Use recursive CTE to find volume ancestor and build path
+  // Simple query against the flattened search_index table
   const sql = `
-    WITH RECURSIVE
-    -- First, get the base search results
-    search_results AS (
-      SELECT
-        w3_items.id,
-        w3_items.name,
-        w3_items.itype,
-        w3_fileInfo.name as file_name,
-        w3_fileInfo.size,
-        w3_fileInfo.date_change,
-        w3_fileInfo.date_create,
-        w3_decent.id_parent
-      FROM w3_items
-      LEFT JOIN w3_fileInfo ON w3_items.id = w3_fileInfo.id_item
-      LEFT JOIN w3_decent ON w3_items.id = w3_decent.id_item
-      WHERE ${clause}
-    ),
-    -- Walk up the parent tree to find volume ancestor
-    ancestor_chain AS (
-      -- Base case: start with each search result's parent
-      SELECT
-        sr.id as original_id,
-        sr.id_parent as current_id,
-        1 as depth,
-        sr.name as path_segment
-      FROM search_results sr
-      WHERE sr.id_parent IS NOT NULL
-
-      UNION ALL
-
-      -- Recursive case: keep walking up until we find a volume or hit root
-      SELECT
-        ac.original_id,
-        d.id_parent as current_id,
-        ac.depth + 1,
-        i.name || '/' || ac.path_segment as path_segment
-      FROM ancestor_chain ac
-      JOIN w3_decent d ON ac.current_id = d.id_item
-      JOIN w3_items i ON ac.current_id = i.id
-      WHERE d.id_parent IS NOT NULL
-        AND ac.depth < 100  -- Safety limit to prevent infinite loops
-    ),
-    -- Find the volume for each search result (the ancestor with itype=172)
-    volume_ancestors AS (
-      SELECT
-        ac.original_id,
-        ac.current_id as volume_id,
-        ac.path_segment as full_path
-      FROM ancestor_chain ac
-      JOIN w3_items i ON ac.current_id = i.id
-      WHERE i.itype = 172  -- Volume type
-    )
     SELECT
-      sr.id,
-      sr.name,
-      sr.itype,
-      sr.file_name,
-      sr.size,
-      sr.date_change,
-      sr.date_create,
-      sr.id_parent,
-      vi.volume_label,
-      vi.root_path,
-      va.full_path
-    FROM search_results sr
-    LEFT JOIN volume_ancestors va ON sr.id = va.original_id
-    LEFT JOIN w3_volumeInfo vi ON va.volume_id = vi.id_item
-    ORDER BY sr.name ASC
+      id,
+      name,
+      itype,
+      name as file_name,
+      size,
+      date_modified as date_change,
+      date_created as date_create,
+      NULL as id_parent,
+      volume_label,
+      volume_path as root_path,
+      full_path
+    FROM search_index
+    WHERE ${clause}
+    ORDER BY name ASC
   `.trim();
 
   return { sql, params };

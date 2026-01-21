@@ -12,15 +12,19 @@ vi.mock('fs/promises', () => ({
   stat: vi.fn(),
 }));
 
-// Mock better-sqlite3
+// Mock better-sqlite3 with exec support for the new architecture
 vi.mock('better-sqlite3', () => {
-  const mockDb = {
+  const createMockDb = () => ({
     close: vi.fn(),
-    pragma: vi.fn(),
-  };
+    exec: vi.fn(),
+    prepare: vi.fn(() => ({
+      all: vi.fn(() => []),
+      get: vi.fn(() => ({ count: 0 })),
+    })),
+  });
 
   return {
-    default: vi.fn(() => mockDb),
+    default: vi.fn(createMockDb),
   };
 });
 
@@ -41,28 +45,32 @@ describe('Database Manager', () => {
   });
 
   describe('initDatabase', () => {
-    it('should initialize database connection', async () => {
-      await initDatabase(mockDbPath);
+    it('should initialize in-memory database', async () => {
+      await initDatabase(mockDbPath, []);
 
       expect(stat).toHaveBeenCalledWith(mockDbPath);
-      expect(Database).toHaveBeenCalledWith(mockDbPath, {
-        readonly: true,
-        fileMustExist: true,
-      });
+      // New architecture creates in-memory database
+      expect(Database).toHaveBeenCalledWith(':memory:');
     });
 
-    it('should enable foreign keys', async () => {
-      await initDatabase(mockDbPath);
+    it('should attach source database and create search_index', async () => {
+      await initDatabase(mockDbPath, []);
 
       const db = getDatabase().getDb();
-      expect(db.pragma).toHaveBeenCalledWith('foreign_keys = ON');
+      // Should call exec for ATTACH, CREATE TABLE, INSERT, CREATE INDEX, DETACH
+      expect(db.exec).toHaveBeenCalled();
+      const execCalls = vi.mocked(db.exec).mock.calls;
+
+      // First call: ATTACH source database
+      expect(execCalls[0][0]).toContain('ATTACH DATABASE');
+      expect(execCalls[0][0]).toContain(mockDbPath);
     });
 
     it('should close existing connection before reinitializing', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
       const firstDb = getDatabase().getDb();
 
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       expect(firstDb.close).toHaveBeenCalled();
     });
@@ -70,7 +78,7 @@ describe('Database Manager', () => {
 
   describe('getDatabase', () => {
     it('should return database manager instance', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       const manager = getDatabase();
       expect(manager).toBeDefined();
@@ -86,14 +94,14 @@ describe('Database Manager', () => {
 
   describe('getDb', () => {
     it('should return database instance', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       const db = getDatabase().getDb();
       expect(db).toBeDefined();
     });
 
     it('should throw error if database not initialized', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
       closeDatabase();
 
       expect(() => getDatabase()).toThrow(
@@ -104,14 +112,14 @@ describe('Database Manager', () => {
 
   describe('hasFileChanged', () => {
     it('should return false if file has not changed', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       const changed = await getDatabase().hasFileChanged();
       expect(changed).toBe(false);
     });
 
     it('should return true if file has been modified', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       // Simulate file modification
       vi.mocked(stat).mockResolvedValue({
@@ -123,7 +131,7 @@ describe('Database Manager', () => {
     });
 
     it('should return false on error checking file stats', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       vi.mocked(stat).mockRejectedValue(new Error('File not found'));
 
@@ -134,7 +142,7 @@ describe('Database Manager', () => {
 
   describe('reloadIfChanged', () => {
     it('should reload database if file has changed', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
       const originalDb = getDatabase().getDb();
 
       // Simulate file modification
@@ -149,7 +157,7 @@ describe('Database Manager', () => {
     });
 
     it('should not reload database if file has not changed', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
       const originalDb = getDatabase().getDb();
 
       const reloaded = await getDatabase().reloadIfChanged();
@@ -161,7 +169,7 @@ describe('Database Manager', () => {
 
   describe('reload', () => {
     it('should force reload database', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
       const originalDb = getDatabase().getDb();
 
       await getDatabase().reload();
@@ -173,7 +181,7 @@ describe('Database Manager', () => {
 
   describe('close', () => {
     it('should close database connection', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
       const db = getDatabase().getDb();
 
       getDatabase().close();
@@ -182,7 +190,7 @@ describe('Database Manager', () => {
     });
 
     it('should handle close when no database is open', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
       getDatabase().close();
 
       // Should not throw
@@ -192,7 +200,7 @@ describe('Database Manager', () => {
 
   describe('closeDatabase', () => {
     it('should close database and reset singleton', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       closeDatabase();
 
@@ -204,7 +212,7 @@ describe('Database Manager', () => {
 
   describe('getPath', () => {
     it('should return database file path', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       const path = getDatabase().getPath();
       expect(path).toBe(mockDbPath);
@@ -213,14 +221,14 @@ describe('Database Manager', () => {
 
   describe('getLastModified', () => {
     it('should return last modified timestamp', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       const lastModified = getDatabase().getLastModified();
       expect(lastModified).toBe(mockStats.mtimeMs);
     });
 
     it('should update last modified after reload', async () => {
-      await initDatabase(mockDbPath);
+      await initDatabase(mockDbPath, []);
 
       vi.mocked(stat).mockResolvedValue({
         mtimeMs: 3000000,

@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 
-const DEBOUNCE_MS = 300;
+const DEBOUNCE_MS = 200;
 
 export interface SearchBarProps {
   onSearch: (query: string) => void;

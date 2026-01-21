@@ -90,9 +90,7 @@ describe('parseSearchQuery', () => {
 
   it('should handle special characters in quoted phrases', () => {
     const result = parseSearchQuery('"file with spaces.txt"');
-    expect(result).toEqual([
-      { value: 'file with spaces.txt', isPhrase: true },
-    ]);
+    expect(result).toEqual([{ value: 'file with spaces.txt', isPhrase: true }]);
   });
 });
 
@@ -163,19 +161,18 @@ describe('globToLikePattern', () => {
 
 describe('buildSearchWhereClause', () => {
   it('should return 1=1 for empty terms', () => {
-    const result = buildSearchWhereClause([], []);
+    const result = buildSearchWhereClause([]);
     expect(result.clause).toBe('1=1');
     expect(result.params).toEqual([]);
   });
 
-  it('should build clause for single term', () => {
+  it('should build clause for single term with ESCAPE', () => {
     const terms: SearchTerm[] = [{ value: 'vacation', isPhrase: false }];
-    const result = buildSearchWhereClause(terms, []);
+    const result = buildSearchWhereClause(terms);
 
-    expect(result.clause).toBe(
-      '(w3_items.name LIKE ? COLLATE NOCASE OR w3_fileInfo.name LIKE ? COLLATE NOCASE)'
-    );
-    expect(result.params).toEqual(['%vacation%', '%vacation%']);
+    // New simplified query searches single name column with ESCAPE clause
+    expect(result.clause).toBe(`name LIKE ? ESCAPE '\\' COLLATE NOCASE`);
+    expect(result.params).toEqual(['%vacation%']);
   });
 
   it('should build clause for multiple terms with AND', () => {
@@ -183,68 +180,52 @@ describe('buildSearchWhereClause', () => {
       { value: 'vacation', isPhrase: false },
       { value: 'photos', isPhrase: false },
     ];
-    const result = buildSearchWhereClause(terms, []);
+    const result = buildSearchWhereClause(terms);
 
     expect(result.clause).toBe(
-      '(w3_items.name LIKE ? COLLATE NOCASE OR w3_fileInfo.name LIKE ? COLLATE NOCASE) AND ' +
-        '(w3_items.name LIKE ? COLLATE NOCASE OR w3_fileInfo.name LIKE ? COLLATE NOCASE)'
+      `name LIKE ? ESCAPE '\\' COLLATE NOCASE AND name LIKE ? ESCAPE '\\' COLLATE NOCASE`
     );
-    expect(result.params).toEqual([
-      '%vacation%',
-      '%vacation%',
-      '%photos%',
-      '%photos%',
-    ]);
+    expect(result.params).toEqual(['%vacation%', '%photos%']);
   });
 
   it('should build clause for quoted phrase', () => {
     const terms: SearchTerm[] = [{ value: 'summer vacation', isPhrase: true }];
-    const result = buildSearchWhereClause(terms, []);
+    const result = buildSearchWhereClause(terms);
 
-    expect(result.clause).toBe(
-      '(w3_items.name LIKE ? COLLATE NOCASE OR w3_fileInfo.name LIKE ? COLLATE NOCASE)'
-    );
-    expect(result.params).toEqual(['%summer vacation%', '%summer vacation%']);
+    expect(result.clause).toBe(`name LIKE ? ESCAPE '\\' COLLATE NOCASE`);
+    expect(result.params).toEqual(['%summer vacation%']);
   });
 
   it('should escape special SQL characters in params', () => {
     const terms: SearchTerm[] = [{ value: 'test%_file', isPhrase: false }];
-    const result = buildSearchWhereClause(terms, []);
+    const result = buildSearchWhereClause(terms);
 
-    expect(result.params).toEqual(['%test\\%\\_file%', '%test\\%\\_file%']);
+    expect(result.params).toEqual(['%test\\%\\_file%']);
   });
 });
 
 describe('buildSearchQuery', () => {
-  it('should build complete SQL query for single term', () => {
+  it('should build query against search_index table', () => {
     const result = buildSearchQuery('vacation', []);
 
     expect(result.sql).toContain('SELECT');
-    expect(result.sql).toContain('FROM w3_items');
-    expect(result.sql).toContain('LEFT JOIN w3_fileInfo');
-    expect(result.sql).toContain('LEFT JOIN w3_decent');
-    expect(result.sql).toContain('LEFT JOIN w3_volumeInfo');
+    expect(result.sql).toContain('FROM search_index');
     expect(result.sql).toContain('WHERE');
-    expect(result.sql).toContain('ORDER BY sr.name ASC'); // sr is the alias in the recursive CTE
-    expect(result.params).toEqual(['%vacation%', '%vacation%']);
+    expect(result.sql).toContain('ORDER BY name ASC');
+    expect(result.params).toEqual(['%vacation%']);
   });
 
   it('should build query for multiple terms', () => {
     const result = buildSearchQuery('vacation photos', []);
 
     expect(result.sql).toContain('AND');
-    expect(result.params).toEqual([
-      '%vacation%',
-      '%vacation%',
-      '%photos%',
-      '%photos%',
-    ]);
+    expect(result.params).toEqual(['%vacation%', '%photos%']);
   });
 
   it('should build query for quoted phrase', () => {
     const result = buildSearchQuery('"summer vacation"', []);
 
-    expect(result.params).toEqual(['%summer vacation%', '%summer vacation%']);
+    expect(result.params).toEqual(['%summer vacation%']);
   });
 
   it('should build query for mixed terms and phrases', () => {
@@ -252,10 +233,7 @@ describe('buildSearchQuery', () => {
 
     expect(result.params).toEqual([
       '%vacation%',
-      '%vacation%',
       '%summer 2024%',
-      '%summer 2024%',
-      '%photos%',
       '%photos%',
     ]);
   });
@@ -267,31 +245,27 @@ describe('buildSearchQuery', () => {
     expect(result.params).toEqual([]);
   });
 
-  it('should select all necessary columns', () => {
+  it('should select all necessary columns from search_index', () => {
     const result = buildSearchQuery('test', []);
 
-    // Columns selected in search_results CTE
-    expect(result.sql).toContain('w3_items.id');
-    expect(result.sql).toContain('w3_items.name');
-    expect(result.sql).toContain('w3_items.itype');
-    expect(result.sql).toContain('w3_fileInfo.name as file_name');
-    expect(result.sql).toContain('w3_fileInfo.size');
-    expect(result.sql).toContain('w3_fileInfo.date_change');
-    expect(result.sql).toContain('w3_fileInfo.date_create');
-    expect(result.sql).toContain('w3_decent.id_parent');
-    // Volume info is joined via volume_ancestors CTE using vi alias
-    expect(result.sql).toContain('vi.volume_label');
-    expect(result.sql).toContain('vi.root_path');
-    // Full path is computed by the recursive CTE
-    expect(result.sql).toContain('va.full_path');
+    // Columns from the flattened search_index table
+    expect(result.sql).toContain('id');
+    expect(result.sql).toContain('name');
+    expect(result.sql).toContain('itype');
+    expect(result.sql).toContain('size');
+    expect(result.sql).toContain('date_modified');
+    expect(result.sql).toContain('date_created');
+    expect(result.sql).toContain('full_path');
+    expect(result.sql).toContain('volume_label');
+    expect(result.sql).toContain('volume_path');
   });
 
   it('should handle SQL injection attempts', () => {
     const maliciousInputs = [
-      "'; DROP TABLE w3_items; --",
+      "'; DROP TABLE search_index; --",
       "' OR '1'='1",
-      "'; DELETE FROM w3_items WHERE '1'='1",
-      "test' UNION SELECT * FROM w3_items --",
+      "'; DELETE FROM search_index WHERE '1'='1",
+      "test' UNION SELECT * FROM search_index --",
     ];
 
     for (const input of maliciousInputs) {

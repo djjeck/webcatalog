@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+} from 'vitest';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import {
@@ -25,9 +33,11 @@ interface RawSearchRow {
   full_path: string | null;
 }
 
-function executeTestSearch(query: string, excludePatterns: string[] = []): RawSearchRow[] {
+function executeTestSearch(
+  query: string,
+): RawSearchRow[] {
   const db = getDatabase().getDb();
-  const { sql, params } = buildSearchQuery(query, excludePatterns);
+  const { sql, params } = buildSearchQuery(query);
   const stmt = db.prepare(sql);
   return stmt.all(...params) as RawSearchRow[];
 }
@@ -48,8 +58,8 @@ function executeTestSearch(query: string, excludePatterns: string[] = []): RawSe
  *   - config
  *   - duplicate_names/sub_a/unique.conf, sub_b/unique.conf
  *
- * Note: The test database uses folders (itype=200) instead of volumes (itype=172),
- * so full_path will be null since the recursive CTE looks for volume ancestors.
+ * The search uses a pre-computed search_index table that flattens all joins
+ * at initialization time, making queries fast and simple.
  */
 describe('Search against real test database', () => {
   beforeAll(async () => {
@@ -95,22 +105,40 @@ describe('Search against real test database', () => {
       expect(results.length).toBe(4);
     });
 
-    it('should return files with different parent IDs', () => {
+    it('should have full_path with different directories for each unique.conf', () => {
       const results = executeTestSearch('unique.conf');
-      const parentIds = results.map((r) => r.id_parent);
+      const paths = results.map((r) => r.full_path);
 
-      // All 4 files have different parents (sub_a and sub_b in each root)
-      const uniqueParents = new Set(parentIds);
-      expect(uniqueParents.size).toBe(4);
+      // All 4 files should have different full paths
+      const uniquePaths = new Set(paths);
+      expect(uniquePaths.size).toBe(4);
+
+      // Verify paths include sub_a and sub_b in different roots
+      const hasRoot1SubA = paths.some(
+        (p) => p?.includes('root_1') && p?.includes('sub_a')
+      );
+      const hasRoot1SubB = paths.some(
+        (p) => p?.includes('root_1') && p?.includes('sub_b')
+      );
+      const hasRoot2SubA = paths.some(
+        (p) => p?.includes('root_2') && p?.includes('sub_a')
+      );
+      const hasRoot2SubB = paths.some(
+        (p) => p?.includes('root_2') && p?.includes('sub_b')
+      );
+
+      expect(hasRoot1SubA).toBe(true);
+      expect(hasRoot1SubB).toBe(true);
+      expect(hasRoot2SubA).toBe(true);
+      expect(hasRoot2SubB).toBe(true);
     });
 
-    it('should not have full_path because test db has no volumes', () => {
-      // This documents current behavior: full_path is null because
-      // the recursive CTE looks for volume ancestors (itype=172) but
-      // test database only has folders (itype=200)
+    it('should have pre-computed full_path for all results', () => {
+      // With the flattened search_index, full_path is pre-computed at init time
       const results = executeTestSearch('unique.conf');
       results.forEach((r) => {
-        expect(r.full_path).toBeNull();
+        expect(r.full_path).not.toBeNull();
+        expect(r.full_path).toContain('unique.conf');
       });
     });
   });
@@ -156,17 +184,17 @@ describe('Search against real test database', () => {
   });
 
   describe('deep nesting - search "deep_file"', () => {
-    // NOTE: There's a known issue where underscores in search terms don't work
-    // because buildLikePattern escapes '_' but the LIKE clause is missing ESCAPE '\\'
-    it('should NOT find deep_file.txt due to underscore escaping bug', () => {
-      // This documents current buggy behavior - searching for "deep_file"
-      // doesn't work because _ is escaped without ESCAPE clause
+    it('should find deep_file.txt with underscore (ESCAPE clause now works)', () => {
+      // The underscore escaping bug was fixed by adding ESCAPE '\\' to the LIKE clause
       const results = executeTestSearch('deep_file');
-      expect(results.length).toBe(0); // Bug: should be 1
+      expect(results.length).toBe(1);
+
+      const names = results.map((r) => r.file_name || r.name);
+      expect(names).toContain('deep_file.txt');
     });
 
     it('should find deep_file.txt when searching without underscore', () => {
-      // Workaround: search for parts of the name without underscore
+      // Searching for parts of the name still works
       const results = executeTestSearch('deep');
       const names = results.map((r) => r.file_name || r.name);
       // Finds both the "deep" folder and "deep_file.txt"
@@ -178,6 +206,14 @@ describe('Search against real test database', () => {
       const results = executeTestSearch('.txt');
       const names = results.map((r) => r.file_name || r.name);
       expect(names).toContain('deep_file.txt');
+    });
+
+    it('should have full path showing deep nesting', () => {
+      const results = executeTestSearch('deep_file');
+      expect(results[0].full_path).toContain('deep');
+      expect(results[0].full_path).toContain('level_1');
+      expect(results[0].full_path).toContain('level_2');
+      expect(results[0].full_path).toContain('level_3');
     });
   });
 
@@ -212,14 +248,17 @@ describe('Search against real test database', () => {
       expect(names).toContain('.config');
     });
 
-    it('should NOT find study_guide.v1.2.md due to underscore escaping bug', () => {
-      // Same underscore bug as deep_file
+    it('should find study_guide.v1.2.md with underscore (ESCAPE clause now works)', () => {
+      // The underscore escaping bug was fixed
       const results = executeTestSearch('study_guide');
-      expect(results.length).toBe(0); // Bug: should be 1
+      expect(results.length).toBe(1);
+
+      const names = results.map((r) => r.file_name || r.name);
+      expect(names).toContain('study_guide.v1.2.md');
     });
 
     it('should find study_guide.v1.2.md when searching without underscore', () => {
-      // Workaround: search for parts without underscore
+      // Workaround still works
       const results = executeTestSearch('study');
       const names = results.map((r) => r.file_name || r.name);
       expect(names).toContain('study_guide.v1.2.md');
@@ -284,13 +323,13 @@ describe('Search against real test database', () => {
   });
 
   describe('folder search', () => {
-    it('should NOT find folders with underscores due to escaping bug', () => {
-      // prefix_tests and root_1 have underscores
+    it('should find folders with underscores (ESCAPE clause now works)', () => {
+      // prefix_tests and root_1 have underscores - now findable
       const prefixResults = executeTestSearch('prefix_tests');
       const rootResults = executeTestSearch('root_1');
 
-      expect(prefixResults.length).toBe(0); // Bug: should be 1
-      expect(rootResults.length).toBe(0); // Bug: should be 1
+      expect(prefixResults.length).toBe(1);
+      expect(rootResults.length).toBe(1);
     });
 
     it('should find folders without underscores in name', () => {
@@ -304,6 +343,187 @@ describe('Search against real test database', () => {
       const results = executeTestSearch('prefix');
       const names = results.map((r) => r.file_name || r.name);
       expect(names).toContain('prefix_tests');
+    });
+  });
+
+  describe('full_path pre-computation', () => {
+    it('should have full_path for all indexed items', () => {
+      const results = executeTestSearch('config');
+      results.forEach((r) => {
+        expect(r.full_path).not.toBeNull();
+      });
+    });
+
+    it('should show complete directory hierarchy in full_path', () => {
+      const results = executeTestSearch('secret');
+      expect(results[0].full_path).toBe('root_1/.hidden_dir/secret.txt');
+    });
+
+    it('should show report.pdf under case_sensitivity/Archive', () => {
+      const results = executeTestSearch('report.pdf');
+      expect(results[0].full_path).toBe(
+        'root_1/case_sensitivity/Archive/report.pdf'
+      );
+    });
+  });
+});
+
+/**
+ * Tests for excludePatterns feature.
+ * Each test suite reinitializes the database with specific exclude patterns
+ * to verify files are filtered out during indexing.
+ */
+describe('Exclude patterns integration tests', () => {
+  afterEach(() => {
+    closeDatabase();
+  });
+
+  describe('exclude by extension pattern (*.txt)', () => {
+    beforeEach(async () => {
+      await initDatabase(TEST_DB_PATH, ['*.txt']);
+    });
+
+    it('should not find any .txt files when *.txt is excluded', () => {
+      const results = executeTestSearch('.txt');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find deep_file.txt when *.txt is excluded', () => {
+      const results = executeTestSearch('deep_file');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find secret.txt when *.txt is excluded', () => {
+      const results = executeTestSearch('secret');
+      expect(results.length).toBe(0);
+    });
+
+    it('should still find non-.txt files like .log files', () => {
+      const results = executeTestSearch('.log');
+      const names = results.map((r) => r.file_name || r.name);
+      expect(names).toContain('file with spaces.log');
+    });
+
+    it('should still find .pdf files', () => {
+      const results = executeTestSearch('report.pdf');
+      expect(results.length).toBe(1);
+    });
+
+    it('should still find .conf files', () => {
+      const results = executeTestSearch('unique.conf');
+      expect(results.length).toBe(4);
+    });
+  });
+
+  describe('exclude by exact filename (config)', () => {
+    beforeEach(async () => {
+      await initDatabase(TEST_DB_PATH, ['config']);
+    });
+
+    it('should not find files named exactly "config"', () => {
+      const results = executeTestSearch('config');
+      const names = results.map((r) => r.file_name || r.name);
+
+      // Should only find .config (hidden file), not "config"
+      expect(names).toContain('.config');
+      expect(names.filter((n) => n === 'config').length).toBe(0);
+    });
+
+    it('should still find .config (hidden file)', () => {
+      const results = executeTestSearch('.config');
+      expect(results.length).toBe(1);
+    });
+  });
+
+  describe('exclude by directory pattern (@eaDir/*)', () => {
+    beforeEach(async () => {
+      // This pattern would exclude files in @eaDir directories
+      // Our test database doesn't have @eaDir, but we verify the pattern doesn't break anything
+      await initDatabase(TEST_DB_PATH, ['@eaDir/*']);
+    });
+
+    it('should still find all normal files when excluding non-existent directory', () => {
+      const results = executeTestSearch('.txt');
+      // Should find all 4 .txt files since @eaDir doesn't exist in test data
+      expect(results.length).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  describe('exclude hidden files pattern (.*)', () => {
+    beforeEach(async () => {
+      await initDatabase(TEST_DB_PATH, ['.*']);
+    });
+
+    it('should not find .config when .* is excluded', () => {
+      const results = executeTestSearch('.config');
+      expect(results.length).toBe(0);
+    });
+
+    it('should still find regular config file', () => {
+      const results = executeTestSearch('config');
+      const names = results.map((r) => r.file_name || r.name);
+
+      // Should find "config" files but not ".config"
+      expect(names).toContain('config');
+      expect(names).not.toContain('.config');
+    });
+  });
+
+  describe('exclude multiple patterns', () => {
+    beforeEach(async () => {
+      await initDatabase(TEST_DB_PATH, ['*.txt', '*.conf', '*.pdf']);
+    });
+
+    it('should not find .txt files', () => {
+      const results = executeTestSearch('.txt');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find .conf files', () => {
+      const results = executeTestSearch('unique.conf');
+      expect(results.length).toBe(0);
+    });
+
+    it('should not find .pdf files', () => {
+      const results = executeTestSearch('report.pdf');
+      expect(results.length).toBe(0);
+    });
+
+    it('should still find .log files', () => {
+      const results = executeTestSearch('.log');
+      expect(results.length).toBeGreaterThan(0);
+    });
+
+    it('should still find .md files', () => {
+      const results = executeTestSearch('study_guide');
+      expect(results.length).toBe(1);
+    });
+  });
+
+  describe('exclude pattern with underscore', () => {
+    beforeEach(async () => {
+      // Exclude files containing underscore - tests that _ is properly escaped
+      await initDatabase(TEST_DB_PATH, ['*_*']);
+    });
+
+    it('should not find files with underscores in name', () => {
+      const deepResults = executeTestSearch('deep_file');
+      const studyResults = executeTestSearch('study_guide');
+      const dataResults = executeTestSearch('data_extended');
+
+      expect(deepResults.length).toBe(0);
+      expect(studyResults.length).toBe(0);
+      expect(dataResults.length).toBe(0);
+    });
+
+    it('should still find files without underscores', () => {
+      const results = executeTestSearch('config');
+      expect(results.length).toBeGreaterThan(0);
+    });
+
+    it('should still find files with spaces (no underscore)', () => {
+      const results = executeTestSearch('"file with spaces"');
+      expect(results.length).toBe(1);
     });
   });
 });

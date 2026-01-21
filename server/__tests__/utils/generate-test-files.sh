@@ -41,10 +41,16 @@ root_1/
 
 root_2/
 ├── duplicate_names/            # Same filename, different volume
+│   ├── @eaDir/
+│   │   ├── sub_a/
+│   │   │   └── unique.conf
+│   │   └── sub_b/
+│   │       └── unique.conf
 │   ├── sub_a/
 │   │   └── unique.conf
-│   └── sub_b/
-│       └── unique.conf
+│   ├── sub_b/
+│   │   └── unique.conf
+|   └── .DS_Store
 └── config                      # Regular file at root
 EOF
 )

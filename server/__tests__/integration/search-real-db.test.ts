@@ -28,8 +28,7 @@ interface RawSearchRow {
   date_change: string | null;
   date_create: string | null;
   id_parent: number | null;
-  volume_label: string | null;
-  root_path: string | null;
+  volume_name: string | null;
   full_path: string | null;
 }
 
@@ -109,24 +108,28 @@ describe('Search against real test database', () => {
 
     it('should have full_path with different directories for each unique.conf', () => {
       const results = executeTestSearch('unique.conf');
-      const paths = results.map((r) => r.full_path);
+      // Combine volume_name + full_path for uniqueness since
+      // files in different volumes can have the same sub-path
+      const qualifiedPaths = results.map(
+        (r) => `${r.volume_name}:${r.full_path}`
+      );
 
-      // All 6 files should have different full paths
-      const uniquePaths = new Set(paths);
+      // All 6 files should have different qualified paths
+      const uniquePaths = new Set(qualifiedPaths);
       expect(uniquePaths.size).toBe(6);
 
-      // Verify paths include sub_a and sub_b in different roots
-      const hasRoot1SubA = paths.some(
-        (p) => p?.includes('root_1') && p?.includes('sub_a')
+      // Verify volume_name distinguishes roots, and paths include sub_a and sub_b
+      const hasRoot1SubA = results.some(
+        (r) => r.volume_name === 'root_1' && r.full_path?.includes('sub_a')
       );
-      const hasRoot1SubB = paths.some(
-        (p) => p?.includes('root_1') && p?.includes('sub_b')
+      const hasRoot1SubB = results.some(
+        (r) => r.volume_name === 'root_1' && r.full_path?.includes('sub_b')
       );
-      const hasRoot2SubA = paths.some(
-        (p) => p?.includes('root_2') && p?.includes('sub_a')
+      const hasRoot2SubA = results.some(
+        (r) => r.volume_name === 'root_2' && r.full_path?.includes('sub_a')
       );
-      const hasRoot2SubB = paths.some(
-        (p) => p?.includes('root_2') && p?.includes('sub_b')
+      const hasRoot2SubB = results.some(
+        (r) => r.volume_name === 'root_2' && r.full_path?.includes('sub_b')
       );
 
       expect(hasRoot1SubA).toBe(true);
@@ -366,13 +369,13 @@ describe('Search against real test database', () => {
 
     it('should show complete directory hierarchy in full_path', () => {
       const results = executeTestSearch('secret');
-      expect(results[0].full_path).toBe('root_1/.hidden_dir/secret.txt');
+      expect(results[0].full_path).toBe('/.hidden_dir/secret.txt');
     });
 
     it('should show report.pdf under case_sensitivity/Archive', () => {
       const results = executeTestSearch('report.pdf');
       expect(results[0].full_path).toBe(
-        'root_1/case_sensitivity/Archive/report.pdf'
+        '/case_sensitivity/Archive/report.pdf'
       );
     });
   });
@@ -558,7 +561,7 @@ describe('Exclude patterns integration tests', () => {
 
       const results = executeTestSearch('.DS_Store');
       expect(results.length).toBe(1);
-      expect(results[0].full_path).toBe('root_2/duplicate_names/.DS_Store');
+      expect(results[0].full_path).toBe('/duplicate_names/.DS_Store');
     });
 
     it('should not find .DS_Store when excluded', async () => {

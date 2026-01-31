@@ -25,10 +25,7 @@ function getTypeIcon(type: 'file' | 'folder' | 'volume'): string {
  * ResultItem component displays a single search result
  */
 export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
-  const fullPath =
-    item.volumePath && item.path
-      ? `${item.volumePath}${item.path}`
-      : item.path || item.name;
+  const fullPath = item.path || item.name;
 
   return (
     <div
@@ -56,9 +53,9 @@ export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
               Modified: {formatDate(item.dateModified)}
             </span>
           )}
-          {item.volumeLabel && (
+          {item.volumeName && (
             <span className="result-item-volume">
-              Volume: {item.volumeLabel}
+              Volume: {item.volumeName}
             </span>
           )}
         </div>

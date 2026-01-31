@@ -69,8 +69,7 @@ class DatabaseManager {
         date_modified TEXT,
         date_created TEXT,
         full_path TEXT,
-        volume_label TEXT,
-        volume_path TEXT
+        volume_name TEXT
       )
     `);
 
@@ -88,7 +87,7 @@ class DatabaseManager {
     // Populate with pre-computed data using the recursive CTE
     // This expensive operation runs once at init, not per-query
     const insertSql = `
-      INSERT INTO search_index (id, name, itype, size, date_modified, date_created, full_path, volume_label, volume_path)
+      INSERT INTO search_index (id, name, itype, size, date_modified, date_created, full_path, volume_name)
       WITH RECURSIVE
       -- Walk up the parent tree to build full paths and find volume ancestors
       ancestor_paths AS (
@@ -165,11 +164,18 @@ class DatabaseManager {
         bp.size,
         bp.date_change,
         bp.date_create,
-        bp.full_path,
-        vi.volume_label,
-        vi.root_path
+        -- Strip the volume name prefix from full_path when a volume ancestor exists
+        CASE
+          WHEN vol_item.name IS NOT NULL AND bp.full_path LIKE vol_item.name || '/%'
+            THEN SUBSTR(bp.full_path, LENGTH(vol_item.name) + 1)
+          WHEN vol_item.name IS NOT NULL AND bp.full_path = vol_item.name
+            THEN ''
+          ELSE bp.full_path
+        END as full_path,
+        vol_item.name as volume_name
       FROM best_paths bp
       LEFT JOIN source.w3_volumeInfo vi ON bp.volume_id = vi.id_item
+      LEFT JOIN source.w3_items vol_item ON bp.volume_id = vol_item.id
       WHERE bp.rn = 1
         ${directoryExcludeConditions}
     `;

@@ -13,8 +13,7 @@ export interface SearchResultItem {
   dateModified: string | null;
   dateCreated: string | null;
   type: 'file' | 'folder' | 'volume';
-  volumeLabel: string | null;
-  volumePath: string | null;
+  volumeName: string | null;
 }
 
 /**

@@ -53,7 +53,7 @@ describe('getItemType', () => {
 });
 
 describe('buildPath', () => {
-  it('should use full_path with root_path when both available', () => {
+  it('should return full_path when available', () => {
     const row = {
       id: 1,
       name: 'item_name',
@@ -63,48 +63,11 @@ describe('buildPath', () => {
       date_change: null,
       date_create: null,
       id_parent: null,
-      volume_label: null,
-      root_path: 'E:\\Backup\\',
-      full_path: 'Folder/actual_file.txt',
+      volume_name: null,
+      full_path: '/Folder/actual_file.txt',
     };
 
-    expect(buildPath(row)).toBe('E:\\Backup\\Folder/actual_file.txt');
-  });
-
-  it('should use full_path with volume_label when root_path is null', () => {
-    const row = {
-      id: 1,
-      name: 'item_name',
-      itype: 0,
-      file_name: 'actual_file.txt',
-      size: 100,
-      date_change: null,
-      date_create: null,
-      id_parent: null,
-      volume_label: 'External Drive',
-      root_path: null,
-      full_path: 'Folder/actual_file.txt',
-    };
-
-    expect(buildPath(row)).toBe('[External Drive]/Folder/actual_file.txt');
-  });
-
-  it('should use full_path alone when no volume info', () => {
-    const row = {
-      id: 1,
-      name: 'item_name',
-      itype: 0,
-      file_name: 'actual_file.txt',
-      size: 100,
-      date_change: null,
-      date_create: null,
-      id_parent: null,
-      volume_label: null,
-      root_path: null,
-      full_path: 'Folder/actual_file.txt',
-    };
-
-    expect(buildPath(row)).toBe('Folder/actual_file.txt');
+    expect(buildPath(row)).toBe('/Folder/actual_file.txt');
   });
 
   it('should fall back to file_name when full_path is null', () => {
@@ -117,8 +80,7 @@ describe('buildPath', () => {
       date_change: null,
       date_create: null,
       id_parent: null,
-      volume_label: null,
-      root_path: null,
+      volume_name: null,
       full_path: null,
     };
 
@@ -135,66 +97,11 @@ describe('buildPath', () => {
       date_change: null,
       date_create: null,
       id_parent: null,
-      volume_label: null,
-      root_path: null,
+      volume_name: null,
       full_path: null,
     };
 
     expect(buildPath(row)).toBe('item_name');
-  });
-
-  it('should prepend root_path to fallback name', () => {
-    const row = {
-      id: 1,
-      name: 'item_name',
-      itype: 0,
-      file_name: 'file.txt',
-      size: 100,
-      date_change: null,
-      date_create: null,
-      id_parent: null,
-      volume_label: null,
-      root_path: 'E:\\Backup\\',
-      full_path: null,
-    };
-
-    expect(buildPath(row)).toBe('E:\\Backup\\file.txt');
-  });
-
-  it('should use volume_label with fallback name when root_path is not available', () => {
-    const row = {
-      id: 1,
-      name: 'item_name',
-      itype: 0,
-      file_name: 'file.txt',
-      size: 100,
-      date_change: null,
-      date_create: null,
-      id_parent: null,
-      volume_label: 'External Drive',
-      root_path: null,
-      full_path: null,
-    };
-
-    expect(buildPath(row)).toBe('[External Drive]/file.txt');
-  });
-
-  it('should prefer root_path over volume_label in full_path', () => {
-    const row = {
-      id: 1,
-      name: 'item_name',
-      itype: 0,
-      file_name: 'file.txt',
-      size: 100,
-      date_change: null,
-      date_create: null,
-      id_parent: null,
-      volume_label: 'External Drive',
-      root_path: 'D:\\',
-      full_path: 'Folder/file.txt',
-    };
-
-    expect(buildPath(row)).toBe('D:\\Folder/file.txt');
   });
 });
 
@@ -231,15 +138,14 @@ describe('mapRowToSearchResult', () => {
     const row = {
       id: 123,
       name: 'test_item',
-      itype: ItemType.FILE, // 1 = file
+      itype: ItemType.FILE,
       file_name: 'test.txt',
       size: 1024,
       date_change: '2024-01-15T10:00:00.000Z',
       date_create: '2024-01-10T08:00:00.000Z',
       id_parent: 1,
-      volume_label: 'USB Drive',
-      root_path: 'E:\\',
-      full_path: 'Documents/test.txt',
+      volume_name: 'USB Drive',
+      full_path: '/Documents/test.txt',
     };
 
     const result = mapRowToSearchResult(row);
@@ -247,13 +153,12 @@ describe('mapRowToSearchResult', () => {
     expect(result).toEqual({
       id: 123,
       name: 'test.txt',
-      path: 'E:\\Documents/test.txt',
+      path: '/Documents/test.txt',
       size: 1024,
       dateModified: '2024-01-15T10:00:00.000Z',
       dateCreated: '2024-01-10T08:00:00.000Z',
       type: 'file',
-      volumeLabel: 'USB Drive',
-      volumePath: 'E:\\',
+      volumeName: 'USB Drive',
     });
   });
 
@@ -261,14 +166,13 @@ describe('mapRowToSearchResult', () => {
     const row = {
       id: 123,
       name: 'folder_item',
-      itype: ItemType.FOLDER, // 200 = folder
+      itype: ItemType.FOLDER,
       file_name: null,
       size: null,
       date_change: null,
       date_create: null,
       id_parent: null,
-      volume_label: null,
-      root_path: null,
+      volume_name: null,
       full_path: null,
     };
 
@@ -278,12 +182,11 @@ describe('mapRowToSearchResult', () => {
       id: 123,
       name: 'folder_item',
       path: 'folder_item',
-      size: 0, // null converts to 0 via Number(null || '0')
+      size: 0,
       dateModified: null,
       dateCreated: null,
       type: 'folder',
-      volumeLabel: null,
-      volumePath: null,
+      volumeName: null,
     });
   });
 
@@ -297,8 +200,7 @@ describe('mapRowToSearchResult', () => {
       date_change: null,
       date_create: null,
       id_parent: null,
-      volume_label: 'External',
-      root_path: 'F:\\',
+      volume_name: 'External',
       full_path: null,
     };
 
@@ -357,8 +259,7 @@ describe('executeSearch', () => {
         date_change: '2024-01-15',
         date_create: '2024-01-10',
         id_parent: null,
-        volume_label: null,
-        root_path: null,
+        volume_name: null,
         full_path: null,
       },
     ];
@@ -447,8 +348,7 @@ describe('executeSearch', () => {
         date_change: null,
         date_create: null,
         id_parent: null,
-        volume_label: null,
-        root_path: null,
+        volume_name: null,
         full_path: null,
       },
       {
@@ -460,8 +360,7 @@ describe('executeSearch', () => {
         date_change: null,
         date_create: null,
         id_parent: null,
-        volume_label: null,
-        root_path: null,
+        volume_name: null,
         full_path: null,
       },
     ];

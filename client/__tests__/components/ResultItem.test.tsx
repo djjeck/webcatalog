@@ -17,8 +17,7 @@ describe('ResultItem', () => {
     dateModified: '2024-06-15T10:30:00Z',
     dateCreated: '2024-06-15T10:00:00Z',
     type: 'file',
-    volumeLabel: 'Backup Drive',
-    volumePath: 'D:',
+    volumeName: 'Backup Drive',
   };
 
   const mockFolderItem: SearchResultItem = {
@@ -29,8 +28,7 @@ describe('ResultItem', () => {
     dateModified: '2024-06-15T10:30:00Z',
     dateCreated: '2024-06-15T10:00:00Z',
     type: 'folder',
-    volumeLabel: 'Backup Drive',
-    volumePath: 'D:',
+    volumeName: 'Backup Drive',
   };
 
   const mockVolumeItem: SearchResultItem = {
@@ -41,8 +39,7 @@ describe('ResultItem', () => {
     dateModified: null,
     dateCreated: null,
     type: 'volume',
-    volumeLabel: 'Backup Drive',
-    volumePath: 'D:',
+    volumeName: 'Backup Drive',
   };
 
   describe('rendering', () => {
@@ -51,7 +48,7 @@ describe('ResultItem', () => {
 
       expect(screen.getByText('vacation-photo.jpg')).toBeInTheDocument();
       expect(
-        screen.getByText('D:/Photos/Summer/vacation-photo.jpg')
+        screen.getByText('/Photos/Summer/vacation-photo.jpg')
       ).toBeInTheDocument();
     });
 
@@ -59,7 +56,7 @@ describe('ResultItem', () => {
       render(<ResultItem item={mockFolderItem} />);
 
       expect(screen.getByText('Photos')).toBeInTheDocument();
-      expect(screen.getByText('D:/Photos')).toBeInTheDocument();
+      expect(screen.getByText('/Photos')).toBeInTheDocument();
     });
 
     it('should render volume item', () => {
@@ -115,7 +112,7 @@ describe('ResultItem', () => {
     it('should handle item without volume path', () => {
       const itemWithoutVolume: SearchResultItem = {
         ...mockFileItem,
-        volumePath: null,
+        volumeName: null,
       };
       render(<ResultItem item={itemWithoutVolume} />);
 
@@ -128,7 +125,7 @@ describe('ResultItem', () => {
       const itemWithoutPath: SearchResultItem = {
         ...mockFileItem,
         path: '',
-        volumePath: null,
+        volumeName: null,
       };
       render(<ResultItem item={itemWithoutPath} />);
 

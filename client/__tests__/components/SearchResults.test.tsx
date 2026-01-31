@@ -14,8 +14,7 @@ describe('SearchResults', () => {
       dateModified: '2024-06-15T10:30:00Z',
       dateCreated: '2024-06-15T10:00:00Z',
       type: 'file',
-      volumeLabel: 'Backup Drive',
-      volumePath: 'D:',
+      volumeName: 'Backup Drive',
     },
     {
       id: 2,
@@ -25,8 +24,7 @@ describe('SearchResults', () => {
       dateModified: '2024-06-15T11:30:00Z',
       dateCreated: '2024-06-15T11:00:00Z',
       type: 'file',
-      volumeLabel: 'Backup Drive',
-      volumePath: 'D:',
+      volumeName: 'Backup Drive',
     },
   ];
 

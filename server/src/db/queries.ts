@@ -127,8 +127,7 @@ export function buildSearchQuery(searchString: string): {
       date_modified as date_change,
       date_created as date_create,
       NULL as id_parent,
-      volume_label,
-      volume_path as root_path,
+      volume_name,
       full_path
     FROM search_index
     WHERE ${clause}

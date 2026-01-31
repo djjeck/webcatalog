@@ -256,8 +256,7 @@ describe('buildSearchQuery', () => {
     expect(result.sql).toContain('date_modified');
     expect(result.sql).toContain('date_created');
     expect(result.sql).toContain('full_path');
-    expect(result.sql).toContain('volume_label');
-    expect(result.sql).toContain('volume_path');
+    expect(result.sql).toContain('volume_name');
   });
 
   it('should handle SQL injection attempts', () => {

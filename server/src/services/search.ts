@@ -21,8 +21,7 @@ interface RawSearchRow {
   date_change: string | null;
   date_create: string | null;
   id_parent: number | null;
-  volume_label: string | null;
-  root_path: string | null;
+  volume_name: string | null;
   full_path: string | null;
 }
 
@@ -60,30 +59,12 @@ export function getItemType(itype: number): 'file' | 'folder' | 'volume' {
  * Uses full_path computed by the recursive CTE query
  */
 export function buildPath(row: RawSearchRow): string {
-  // If we have the full path from the recursive query, use it
   if (row.full_path) {
-    // Prepend volume root path or label if available
-    if (row.root_path) {
-      return `${row.root_path}${row.full_path}`;
-    }
-    if (row.volume_label) {
-      return `[${row.volume_label}]/${row.full_path}`;
-    }
     return row.full_path;
   }
 
   // Fallback: use the file_name if available, otherwise use item name
-  const name = row.file_name || row.name;
-
-  if (row.root_path) {
-    return `${row.root_path}${name}`;
-  }
-
-  if (row.volume_label) {
-    return `[${row.volume_label}]/${name}`;
-  }
-
-  return name;
+  return row.file_name || row.name;
 }
 
 /**
@@ -117,8 +98,7 @@ export function mapRowToSearchResult(row: RawSearchRow): SearchResultItem {
     dateModified: formatDate(row.date_change),
     dateCreated: formatDate(row.date_create),
     type: getItemType(row.itype),
-    volumeLabel: row.volume_label,
-    volumePath: row.root_path,
+    volumeName: row.volume_name,
   };
 }
 

@@ -103,10 +103,10 @@ describe('ResultItem', () => {
       expect(screen.getByText(/Modified:/)).toBeInTheDocument();
     });
 
-    it('should show volume label', () => {
+    it('should show volume name badge', () => {
       render(<ResultItem item={mockFileItem} />);
 
-      expect(screen.getByText(/Volume: Backup Drive/)).toBeInTheDocument();
+      expect(screen.getByText(/Backup Drive/)).toBeInTheDocument();
     });
 
     it('should handle item without volume path', () => {

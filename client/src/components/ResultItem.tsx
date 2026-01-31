@@ -32,8 +32,15 @@ export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
       className={`result-item result-item-${item.type}`}
       data-testid="result-item"
     >
-      <div className="result-item-icon" aria-hidden="true">
-        {getTypeIcon(item.type)}
+      <div className="result-item-sidebar">
+        <div className="result-item-icon" aria-hidden="true">
+          {getTypeIcon(item.type)}
+        </div>
+        {item.volumeName && (
+          <div className="result-item-volume-badge" title={item.volumeName}>
+            <span aria-hidden="true">📦</span> {item.volumeName}
+          </div>
+        )}
       </div>
       <div className="result-item-content">
         <div className="result-item-name">
@@ -51,11 +58,6 @@ export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
           {item.dateModified && (
             <span className="result-item-date">
               Modified: {formatDate(item.dateModified)}
-            </span>
-          )}
-          {item.volumeName && (
-            <span className="result-item-volume">
-              Volume: {item.volumeName}
             </span>
           )}
         </div>

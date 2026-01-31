@@ -182,9 +182,9 @@ class DatabaseManager {
 
     this.db.exec(insertSql);
 
-    // Compute folder sizes by summing all descendant file sizes
-    // Folders (itype=200) don't have entries in w3_fileInfo, so we
-    // recursively walk the w3_decent hierarchy to sum file sizes.
+    // Compute folder sizes by summing all descendant file sizes.
+    // Uses the source database directly (not search_index) so that
+    // excluded files still count toward their parent folder's size.
     this.db.exec(`
       UPDATE search_index
       SET size = (
@@ -194,10 +194,9 @@ class DatabaseManager {
           SELECT d.id_item FROM source.w3_decent d
           JOIN descendants ds ON d.id_parent = ds.id_item
         )
-        SELECT COALESCE(SUM(si.size), 0)
+        SELECT COALESCE(SUM(f.size), 0)
         FROM descendants ds
-        JOIN search_index si ON si.id = ds.id_item
-        WHERE si.itype = ${ItemType.FILE}
+        JOIN source.w3_fileInfo f ON f.id_item = ds.id_item
       )
       WHERE search_index.itype = ${ItemType.FOLDER}
     `);

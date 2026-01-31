@@ -24,10 +24,12 @@ class DatabaseManager {
   private sourceDbPath: string;
   private lastModified: number = 0;
   private readonly excludePatterns: string[];
+  private readonly minFileSize: number;
 
-  constructor(dbPath: string, excludePatterns: string[]) {
+  constructor(dbPath: string, excludePatterns: string[], minFileSize: number) {
     this.sourceDbPath = dbPath;
     this.excludePatterns = excludePatterns;
+    this.minFileSize = minFileSize;
   }
 
   /**
@@ -109,6 +111,7 @@ class DatabaseManager {
         LEFT JOIN source.w3_decent d ON i.id = d.id_item
         -- Exclude system items (catalog root, contacts, tags, etc.)
         WHERE i.itype IN (${ItemType.FILE}, ${ItemType.FOLDER}, ${ItemType.VOLUME})
+        ${this.minFileSize > 0 ? `AND (i.itype != ${ItemType.FILE} OR COALESCE(f.size, 0) >= ${this.minFileSize})` : ''}
         ${filenameExcludeConditions}
 
         UNION ALL
@@ -379,12 +382,13 @@ let dbManager: DatabaseManager | null = null;
  */
 export async function initDatabase(
   dbPath: string,
-  excludePatterns: string[]
+  excludePatterns: string[],
+  minFileSize: number = 0
 ): Promise<void> {
   if (dbManager) {
     dbManager.close();
   }
-  dbManager = new DatabaseManager(dbPath, excludePatterns);
+  dbManager = new DatabaseManager(dbPath, excludePatterns, minFileSize);
   await dbManager.init();
 }
 

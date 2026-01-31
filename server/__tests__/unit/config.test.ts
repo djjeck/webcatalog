@@ -4,6 +4,7 @@ import {
   validateConfig,
   getConfig,
   resetConfig,
+  parseFileSize,
   type Config,
 } from '../../src/config.js';
 
@@ -42,6 +43,15 @@ describe('Config Module', () => {
       expect(config.staticPath).toBe('./public');
       expect(config.serveStatic).toBe(false); // false in development by default
       expect(config.excludePatterns).toEqual([]);
+      expect(config.minFileSize).toBe(0);
+    });
+
+    it('should read MIN_FILE_SIZE from environment', () => {
+      process.env.MIN_FILE_SIZE = '100kb';
+
+      const config = loadConfig();
+
+      expect(config.minFileSize).toBe(102400);
     });
 
     it('should read DB_PATH from environment', () => {
@@ -244,6 +254,7 @@ describe('Config Module', () => {
         staticPath: './public',
         serveStatic: false,
         excludePatterns: [],
+        minFileSize: 0,
       };
 
       const errors = validateConfig(config);
@@ -263,6 +274,7 @@ describe('Config Module', () => {
         staticPath: './public',
         serveStatic: false,
         excludePatterns: [],
+        minFileSize: 0,
       };
 
       const errors = validateConfig(config);
@@ -283,6 +295,7 @@ describe('Config Module', () => {
         staticPath: './public',
         serveStatic: false,
         excludePatterns: [],
+        minFileSize: 0,
       };
 
       const errors = validateConfig(config);
@@ -303,6 +316,7 @@ describe('Config Module', () => {
         staticPath: './public',
         serveStatic: false,
         excludePatterns: [],
+        minFileSize: 0,
       };
 
       const configHigh: Config = {
@@ -316,6 +330,7 @@ describe('Config Module', () => {
         staticPath: './public',
         serveStatic: false,
         excludePatterns: [],
+        minFileSize: 0,
       };
 
       expect(validateConfig(configLow)).toEqual([]);
@@ -334,6 +349,7 @@ describe('Config Module', () => {
         staticPath: './public',
         serveStatic: true,
         excludePatterns: [],
+        minFileSize: 0,
       };
 
       const errors = validateConfig(config);
@@ -369,6 +385,51 @@ describe('Config Module', () => {
 
       expect(config1.port).toBe(4000);
       expect(config2.port).toBe(5000);
+    });
+  });
+
+  describe('parseFileSize', () => {
+    it('should parse bytes', () => {
+      expect(parseFileSize('500b')).toBe(500);
+    });
+
+    it('should parse kilobytes', () => {
+      expect(parseFileSize('100kb')).toBe(102400);
+    });
+
+    it('should parse megabytes', () => {
+      expect(parseFileSize('5MB')).toBe(5242880);
+    });
+
+    it('should parse gigabytes', () => {
+      expect(parseFileSize('1gb')).toBe(1073741824);
+    });
+
+    it('should be case insensitive', () => {
+      expect(parseFileSize('100KB')).toBe(102400);
+      expect(parseFileSize('100Kb')).toBe(102400);
+      expect(parseFileSize('5Mb')).toBe(5242880);
+    });
+
+    it('should return 0 for undefined', () => {
+      expect(parseFileSize(undefined)).toBe(0);
+    });
+
+    it('should return 0 for empty string', () => {
+      expect(parseFileSize('')).toBe(0);
+      expect(parseFileSize('  ')).toBe(0);
+    });
+
+    it('should return 0 and warn for invalid format', () => {
+      expect(parseFileSize('invalid')).toBe(0);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid MIN_FILE_SIZE')
+      );
+    });
+
+    it('should return 0 and warn for missing unit', () => {
+      expect(parseFileSize('100')).toBe(0);
+      expect(console.warn).toHaveBeenCalled();
     });
   });
 

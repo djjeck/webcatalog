@@ -27,6 +27,8 @@ export interface Config {
   serveStatic: boolean;
   /** Patterns to exclude from search results (glob-like patterns) */
   excludePatterns: string[];
+  /** Minimum file size in bytes (files smaller than this are excluded from results) */
+  minFileSize: number;
 }
 
 /**
@@ -86,6 +88,35 @@ function parseExcludePatterns(value: string | undefined): string[] {
 }
 
 /**
+ * Parse a file size string like "100kb", "5MB", "1gb" into bytes.
+ * Returns 0 if undefined/empty (no filtering).
+ */
+export function parseFileSize(value: string | undefined): number {
+  if (!value || value.trim() === '') {
+    return 0;
+  }
+
+  const match = value.trim().match(/^(\d+)\s*(b|kb|mb|gb)$/i);
+  if (!match) {
+    console.warn(
+      `Invalid MIN_FILE_SIZE "${value}". Expected format: number + unit (b, kb, mb, gb). Example: "100kb". Using default: 0 (no filtering)`
+    );
+    return 0;
+  }
+
+  const num = parseFloat(match[1]);
+  const unit = match[2].toLowerCase();
+  const multipliers: Record<string, number> = {
+    b: 1,
+    kb: 1024,
+    mb: 1024 * 1024,
+    gb: 1024 * 1024 * 1024,
+  };
+
+  return Math.floor(num * multipliers[unit]);
+}
+
+/**
  * Load configuration from environment variables
  */
 export function loadConfig(): Config {
@@ -108,6 +139,7 @@ export function loadConfig(): Config {
     staticPath,
     serveStatic,
     excludePatterns: parseExcludePatterns(process.env.EXCLUDE_PATTERNS),
+    minFileSize: parseFileSize(process.env.MIN_FILE_SIZE),
   };
 }
 

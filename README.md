@@ -53,6 +53,8 @@ services:
       - PORT=3000
       # Optional: exclude system/temp files from search results
       - EXCLUDE_PATTERNS=@eaDir/*,*.tmp,Thumbs.db,.DS_Store
+      # Optional: exclude files smaller than a given size (e.g. 100kb, 5MB, 1gb)
+      - MIN_FILE_SIZE=100kb
     restart: unless-stopped
 ```
 
@@ -147,6 +149,7 @@ All searches are case-insensitive and match partial words.
 | `EXCLUDE_PATTERNS`     | Comma-separated patterns to exclude     | (none)                           |
 | `PORT`                 | Server port                             | `3000`                           |
 | `NODE_ENV`             | Environment (development/production)    | `production`                     |
+| `MIN_FILE_SIZE`        | Minimum file size to include in results | (none)                           |
 | `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload     | `0` (midnight)                   |
 | `STATIC_PATH`          | Path to static files directory (the UI) | `./public`                       |
 
@@ -166,6 +169,21 @@ EXCLUDE_PATTERNS="*.tmp,Thumbs.db,.DS_Store"
 
 # Exclude Synology NAS metadata
 EXCLUDE_PATTERNS="@eaDir/*,#recycle/*"
+```
+
+### Minimum File Size
+
+The `MIN_FILE_SIZE` environment variable excludes files smaller than a given size from search results. This is useful for filtering out small system files or metadata files. Folders are not affected — they always appear in results, and their displayed size still includes all files (even those below the threshold).
+
+**Format:** A number followed by a unit: `b`, `kb`, `mb`, or `gb` (case insensitive).
+
+**Examples:**
+```bash
+# Exclude files smaller than 100 KB
+MIN_FILE_SIZE="100kb"
+
+# Exclude files smaller than 5 MB
+MIN_FILE_SIZE="5MB"
 ```
 
 ## Database Schema

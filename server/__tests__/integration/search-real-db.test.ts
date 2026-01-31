@@ -735,4 +735,51 @@ describe('Exclude patterns integration tests', () => {
       expect(results.length).toBe(1);
     });
   });
+
+  describe('minimum file size filtering', () => {
+    afterEach(() => {
+      closeDatabase();
+    });
+
+    it('should exclude small files when minFileSize is set very high', async () => {
+      // Use a very large min size to exclude all files
+      await initDatabase(TEST_DB_PATH, [], 1024 * 1024 * 1024); // 1 GB
+
+      const results = executeTestSearch('config');
+      const files = results.filter((r) => r.itype === 1);
+      expect(files.length).toBe(0);
+    });
+
+    it('should still include folders when minFileSize is set', async () => {
+      await initDatabase(TEST_DB_PATH, [], 1024 * 1024 * 1024); // 1 GB
+
+      const results = executeTestSearch('Archive');
+      const folders = results.filter((r) => r.itype === 200);
+      expect(folders.length).toBe(1);
+    });
+
+    it('should still compute folder sizes from all files including filtered ones', async () => {
+      // First get folder size with no filtering
+      await initDatabase(TEST_DB_PATH, [], 0);
+      const resultsNoFilter = executeTestSearch('Archive');
+      const folderNoFilter = resultsNoFilter.find((r) => r.itype === 200);
+      const sizeNoFilter = folderNoFilter?.size;
+      closeDatabase();
+
+      // Then with filtering - folder size should be the same
+      await initDatabase(TEST_DB_PATH, [], 1024 * 1024 * 1024);
+      const resultsFiltered = executeTestSearch('Archive');
+      const folderFiltered = resultsFiltered.find((r) => r.itype === 200);
+
+      expect(folderFiltered?.size).toBe(sizeNoFilter);
+    });
+
+    it('should not filter files when minFileSize is 0', async () => {
+      await initDatabase(TEST_DB_PATH, [], 0);
+
+      const results = executeTestSearch('config');
+      const files = results.filter((r) => r.itype === 1);
+      expect(files.length).toBeGreaterThan(0);
+    });
+  });
 });

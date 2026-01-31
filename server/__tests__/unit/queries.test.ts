@@ -211,7 +211,7 @@ describe('buildSearchQuery', () => {
     expect(result.sql).toContain('SELECT');
     expect(result.sql).toContain('FROM search_index');
     expect(result.sql).toContain('WHERE');
-    expect(result.sql).toContain('ORDER BY name ASC');
+    expect(result.sql).toContain('ORDER BY size DESC');
     expect(result.params).toEqual(['%vacation%']);
   });
 

@@ -132,7 +132,7 @@ export function buildSearchQuery(searchString: string): {
       full_path
     FROM search_index
     WHERE ${clause}
-    ORDER BY name ASC
+    ORDER BY size DESC
   `.trim();
 
   return { sql, params };

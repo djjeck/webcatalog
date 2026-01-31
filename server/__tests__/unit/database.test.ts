@@ -32,6 +32,7 @@ describe('Database Manager', () => {
   const mockDbPath = '/test/path/catalog.w3cat';
   const mockStats = {
     mtimeMs: 1000000,
+    size: 5000000,
   };
 
   beforeEach(() => {
@@ -118,12 +119,39 @@ describe('Database Manager', () => {
       expect(changed).toBe(false);
     });
 
-    it('should return true if file has been modified', async () => {
+    it('should return true if file modification time has changed', async () => {
       await initDatabase(mockDbPath, []);
 
-      // Simulate file modification
+      // Simulate file modification time change
       vi.mocked(stat).mockResolvedValue({
         mtimeMs: 2000000, // Later timestamp
+        size: 5000000, // Same size
+      } as any);
+
+      const changed = await getDatabase().hasFileChanged();
+      expect(changed).toBe(true);
+    });
+
+    it('should return true if file size has changed', async () => {
+      await initDatabase(mockDbPath, []);
+
+      // Simulate file size change without modification time change
+      vi.mocked(stat).mockResolvedValue({
+        mtimeMs: 1000000, // Same timestamp
+        size: 6000000, // Different size
+      } as any);
+
+      const changed = await getDatabase().hasFileChanged();
+      expect(changed).toBe(true);
+    });
+
+    it('should return true if both modification time and size have changed', async () => {
+      await initDatabase(mockDbPath, []);
+
+      // Simulate both changes
+      vi.mocked(stat).mockResolvedValue({
+        mtimeMs: 2000000, // Later timestamp
+        size: 6000000, // Different size
       } as any);
 
       const changed = await getDatabase().hasFileChanged();
@@ -148,6 +176,7 @@ describe('Database Manager', () => {
       // Simulate file modification
       vi.mocked(stat).mockResolvedValue({
         mtimeMs: 2000000,
+        size: 6000000,
       } as any);
 
       const reloaded = await getDatabase().reloadIfChanged();
@@ -232,12 +261,36 @@ describe('Database Manager', () => {
 
       vi.mocked(stat).mockResolvedValue({
         mtimeMs: 3000000,
+        size: 7000000,
       } as any);
 
       await getDatabase().reload();
 
       const lastModified = getDatabase().getLastModified();
       expect(lastModified).toBe(3000000);
+    });
+  });
+
+  describe('getLastSize', () => {
+    it('should return last file size', async () => {
+      await initDatabase(mockDbPath, []);
+
+      const lastSize = getDatabase().getLastSize();
+      expect(lastSize).toBe(mockStats.size);
+    });
+
+    it('should update last size after reload', async () => {
+      await initDatabase(mockDbPath, []);
+
+      vi.mocked(stat).mockResolvedValue({
+        mtimeMs: 3000000,
+        size: 7000000,
+      } as any);
+
+      await getDatabase().reload();
+
+      const lastSize = getDatabase().getLastSize();
+      expect(lastSize).toBe(7000000);
     });
   });
 

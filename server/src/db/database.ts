@@ -23,6 +23,7 @@ class DatabaseManager {
   private db: Database.Database | null = null;
   private sourceDbPath: string;
   private lastModified: number = 0;
+  private lastSize: number = 0;
   private readonly excludePatterns: string[];
   private readonly minFileSize: number;
 
@@ -38,6 +39,7 @@ class DatabaseManager {
   async init(): Promise<void> {
     const stats = await stat(this.sourceDbPath);
     this.lastModified = stats.mtimeMs;
+    this.lastSize = stats.size;
 
     // Create in-memory database for fast searches
     this.db = new Database(':memory:');
@@ -305,11 +307,12 @@ class DatabaseManager {
 
   /**
    * Check if database file has been modified since last load
+   * Checks both modification time and file size to detect changes
    */
   async hasFileChanged(): Promise<boolean> {
     try {
       const stats = await stat(this.sourceDbPath);
-      return stats.mtimeMs > this.lastModified;
+      return stats.mtimeMs > this.lastModified || stats.size !== this.lastSize;
     } catch (error) {
       console.error('Error checking file modification time:', error);
       return false;
@@ -371,6 +374,13 @@ class DatabaseManager {
    */
   getLastModified(): number {
     return this.lastModified;
+  }
+
+  /**
+   * Get last file size
+   */
+  getLastSize(): number {
+    return this.lastSize;
   }
 }
 

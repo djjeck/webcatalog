@@ -50,11 +50,7 @@ export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
           {highlightTerms(fullPath, searchTerms)}
         </div>
         <div className="result-item-meta">
-          {item.type === 'file' && (
-            <span className="result-item-size">
-              {formatFileSize(item.size)}
-            </span>
-          )}
+          <span className="result-item-size">{formatFileSize(item.size)}</span>
           {item.dateModified && (
             <span className="result-item-date">
               Modified: {formatDate(item.dateModified)}

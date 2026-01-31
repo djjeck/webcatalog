@@ -24,7 +24,7 @@ describe('ResultItem', () => {
     id: 2,
     name: 'Photos',
     path: '/Photos',
-    size: null,
+    size: 5242880,
     dateModified: '2024-06-15T10:30:00Z',
     dateCreated: '2024-06-15T10:00:00Z',
     type: 'folder',
@@ -90,11 +90,11 @@ describe('ResultItem', () => {
       expect(screen.getByText('2.0 MB')).toBeInTheDocument();
     });
 
-    it('should not show file size for folder items', () => {
+    it('should show computed size for folder items', () => {
       render(<ResultItem item={mockFolderItem} />);
 
-      // Size should not be in metadata for folders
-      expect(screen.queryByText(/MB|KB|GB/)).not.toBeInTheDocument();
+      // Folders now have computed sizes from descendant files
+      expect(screen.getByText(/MB/)).toBeInTheDocument();
     });
 
     it('should show modified date', () => {

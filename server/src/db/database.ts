@@ -176,6 +176,26 @@ class DatabaseManager {
 
     this.db.exec(insertSql);
 
+    // Compute folder sizes by summing all descendant file sizes
+    // Folders (itype=200) don't have entries in w3_fileInfo, so we
+    // recursively walk the w3_decent hierarchy to sum file sizes.
+    this.db.exec(`
+      UPDATE search_index
+      SET size = (
+        WITH RECURSIVE descendants AS (
+          SELECT id_item FROM source.w3_decent WHERE id_parent = search_index.id
+          UNION ALL
+          SELECT d.id_item FROM source.w3_decent d
+          JOIN descendants ds ON d.id_parent = ds.id_item
+        )
+        SELECT COALESCE(SUM(si.size), 0)
+        FROM descendants ds
+        JOIN search_index si ON si.id = ds.id_item
+        WHERE si.itype = ${ItemType.FILE}
+      )
+      WHERE search_index.itype = ${ItemType.FOLDER}
+    `);
+
     // Create index on name for fast LIKE searches
     this.db.exec(
       'CREATE INDEX idx_search_name ON search_index(name COLLATE NOCASE)'

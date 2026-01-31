@@ -346,6 +346,14 @@ describe('Search against real test database', () => {
       const names = results.map((r) => r.file_name || r.name);
       expect(names).toContain('prefix_tests');
     });
+
+    it('should compute folder sizes from descendant files', () => {
+      // Folders should have computed sizes (sum of all descendant file sizes)
+      const results = executeTestSearch('Archive');
+      expect(results.length).toBe(1);
+      expect(results[0].itype).toBe(200); // folder
+      expect(results[0].size).toBeGreaterThan(0);
+    });
   });
 
   describe('full_path pre-computation', () => {

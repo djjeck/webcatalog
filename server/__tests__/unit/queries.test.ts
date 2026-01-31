@@ -5,6 +5,7 @@ import {
   globToLikePattern,
   buildSearchWhereClause,
   buildSearchQuery,
+  buildRandomQuery,
   type SearchTerm,
 } from '../../src/db/queries.js';
 
@@ -287,6 +288,39 @@ describe('buildSearchQuery', () => {
       // Should handle gracefully without errors
       expect(result.sql).toBeDefined();
       expect(result.params).toBeDefined();
+    }
+  });
+});
+
+describe('buildRandomQuery', () => {
+  it('should return a query that selects a random row', () => {
+    const { sql, params } = buildRandomQuery();
+
+    expect(sql).toContain('FROM search_index');
+    expect(sql).toContain('ORDER BY RANDOM()');
+    expect(sql).toContain('LIMIT 1');
+    expect(params).toEqual([]);
+  });
+
+  it('should select the same columns as buildSearchQuery', () => {
+    const { sql: randomSql } = buildRandomQuery();
+    const { sql: searchSql } = buildSearchQuery('test');
+
+    // Both should select the same columns
+    for (const col of [
+      'id',
+      'name',
+      'itype',
+      'file_name',
+      'size',
+      'date_change',
+      'date_create',
+      'id_parent',
+      'volume_name',
+      'full_path',
+    ]) {
+      expect(randomSql).toContain(col);
+      expect(searchSql).toContain(col);
     }
   });
 });

@@ -3,7 +3,7 @@ import { SearchBar } from './components/SearchBar';
 import { SearchResults } from './components/SearchResults';
 import { StatusBar } from './components/StatusBar';
 import { EmptyState } from './components/EmptyState';
-import { search, getDbStatus, ApiError } from './services/api';
+import { search, randomResult, getDbStatus, ApiError } from './services/api';
 import type { DbStatusResponse, SearchResultItem } from './types/api';
 import './App.css';
 
@@ -110,6 +110,28 @@ function App() {
     }
   }, []);
 
+  // Handle random button click
+  const handleRandom = useCallback(async () => {
+    setQuery('');
+    setAppState('loading');
+    setError(null);
+
+    try {
+      const result = await randomResult();
+      setResults([result]);
+      setTotalResults(1);
+      setExecutionTime(0);
+      setAppState('results');
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : 'An error occurred while fetching a random result';
+      setError(message);
+      setAppState('error');
+    }
+  }, []);
+
   // Handle clear (Esc key)
   const handleClear = useCallback(() => {
     setQuery('');
@@ -148,16 +170,12 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1 className="app-title">WebCatalog</h1>
-        <p className="app-subtitle">Search your file catalog</p>
-      </header>
-
       <main className="app-main">
         <div className="search-container">
           <SearchBar
             onSearch={handleSearch}
             onClear={handleClear}
+            onRandom={handleRandom}
             initialQuery={query}
           />
         </div>

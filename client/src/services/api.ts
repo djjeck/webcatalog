@@ -5,6 +5,7 @@
 
 import type {
   SearchResponse,
+  SearchResultItem,
   DbStatusResponse,
   HealthResponse,
   ErrorResponse,
@@ -108,6 +109,16 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
 
   const url = `${getBaseUrl()}/search?${searchParams.toString()}`;
   return fetchWithErrorHandling<SearchResponse>(url, { signal });
+}
+
+/**
+ * Get a random item from the catalog
+ * @returns A single random search result item
+ * @throws ApiError if the request fails
+ */
+export async function randomResult(): Promise<SearchResultItem> {
+  const url = `${getBaseUrl()}/random`;
+  return fetchWithErrorHandling<SearchResultItem>(url);
 }
 
 /**

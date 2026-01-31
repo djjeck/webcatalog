@@ -109,6 +109,30 @@ export function buildSearchWhereClause(terms: SearchTerm[]): {
  * Build complete search query SQL
  * Queries the pre-computed search_index table directly.
  */
+/**
+ * Build a query that returns a single random row from the search_index
+ */
+export function buildRandomQuery(): { sql: string; params: [] } {
+  const sql = `
+    SELECT
+      id,
+      name,
+      itype,
+      name as file_name,
+      size,
+      date_modified as date_change,
+      date_created as date_create,
+      NULL as id_parent,
+      volume_name,
+      full_path
+    FROM search_index
+    ORDER BY RANDOM()
+    LIMIT 1
+  `.trim();
+
+  return { sql, params: [] };
+}
+
 export function buildSearchQuery(searchString: string): {
   sql: string;
   params: string[];

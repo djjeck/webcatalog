@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   search,
+  randomResult,
   getDbStatus,
   healthCheck,
   isHealthy,
@@ -8,6 +9,7 @@ import {
 } from '../../src/services/api';
 import type {
   SearchResponse,
+  SearchResultItem,
   DbStatusResponse,
   HealthResponse,
 } from '../../src/types/api';
@@ -338,6 +340,49 @@ describe('API Client', () => {
       const result = await isHealthy();
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('randomResult', () => {
+    it('should fetch a random result from the API', async () => {
+      const mockResponse: SearchResultItem = {
+        id: 42,
+        name: 'random.txt',
+        path: '/docs/random.txt',
+        size: 512,
+        dateModified: '2024-03-01T12:00:00.000Z',
+        dateCreated: '2024-03-01T10:00:00.000Z',
+        type: 'file',
+        volumeName: 'Drive1',
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await randomResult();
+
+      expect(mockFetch).toHaveBeenCalledWith('/api/random', {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should throw ApiError on error response', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: () =>
+          Promise.resolve({
+            error: 'Internal Server Error',
+            message: 'No items in the database',
+            statusCode: 500,
+          }),
+      });
+
+      await expect(randomResult()).rejects.toThrow(ApiError);
     });
   });
 

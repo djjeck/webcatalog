@@ -12,6 +12,7 @@ const DEBOUNCE_MS = 200;
 export interface SearchBarProps {
   onSearch: (query: string) => void;
   onClear?: () => void;
+  onRandom?: () => void;
   initialQuery?: string;
 }
 
@@ -22,10 +23,10 @@ export interface SearchBarProps {
 export function SearchBar({
   onSearch,
   onClear,
+  onRandom,
   initialQuery = '',
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
-  const [showHelp, setShowHelp] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -84,10 +85,6 @@ export function SearchBar({
     [onClear]
   );
 
-  const toggleHelp = useCallback(() => {
-    setShowHelp((prev) => !prev);
-  }, []);
-
   return (
     <div className="search-bar">
       <div className="search-form">
@@ -101,38 +98,17 @@ export function SearchBar({
           className="search-input"
           aria-label="Search query"
         />
-        <button
-          type="button"
-          className="help-button"
-          onClick={toggleHelp}
-          aria-label="Toggle search help"
-          aria-expanded={showHelp}
-        >
-          ?
-        </button>
+        {onRandom && (
+          <button
+            type="button"
+            className="random-button"
+            onClick={onRandom}
+            aria-label="Get a random result"
+          >
+            🎰
+          </button>
+        )}
       </div>
-      {showHelp && (
-        <div className="search-help" role="tooltip">
-          <h4>Search Syntax</h4>
-          <ul>
-            <li>
-              <code>vacation</code> - Search for files containing "vacation"
-            </li>
-            <li>
-              <code>vacation photos</code> - Search for files containing both
-              "vacation" AND "photos"
-            </li>
-            <li>
-              <code>"vacation photos"</code> - Search for exact phrase "vacation
-              photos"
-            </li>
-            <li>
-              <code>vacation "summer 2024"</code> - Mixed: "vacation" AND exact
-              phrase "summer 2024"
-            </li>
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

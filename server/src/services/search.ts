@@ -4,7 +4,7 @@
  */
 
 import { getDatabase } from '../db/database.js';
-import { buildSearchQuery } from '../db/queries.js';
+import { buildSearchQuery, buildRandomQuery } from '../db/queries.js';
 import { checkAndReloadIfChanged } from './refresh.js';
 import type { SearchResultItem, SearchResponse } from '../types/api.js';
 import { ItemType } from '../types/database.js';
@@ -150,6 +150,23 @@ export async function executeSearch(
  * Get total count of items matching search query
  * Useful for pagination information
  */
+/**
+ * Return a single random item from the database
+ */
+export async function executeRandom(): Promise<SearchResultItem> {
+  await checkAndReloadIfChanged();
+
+  const db = getDatabase().getDb();
+  const { sql, params } = buildRandomQuery();
+  const row = db.prepare(sql).get(...params) as RawSearchRow | undefined;
+
+  if (!row) {
+    throw new Error('No items in the database');
+  }
+
+  return mapRowToSearchResult(row);
+}
+
 export async function getSearchCount(query: string): Promise<number> {
   const db = getDatabase().getDb();
 

@@ -5,6 +5,7 @@ import {
   formatDate,
   mapRowToSearchResult,
   executeSearch,
+  executeRandom,
   getSearchCount,
 } from '../../../src/services/search.js';
 import { ItemType } from '../../../src/types/database.js';
@@ -17,6 +18,7 @@ vi.mock('../../../src/db/database.js', () => ({
 // Mock the queries module
 vi.mock('../../../src/db/queries.js', () => ({
   buildSearchQuery: vi.fn(),
+  buildRandomQuery: vi.fn(),
 }));
 
 // Mock the refresh service
@@ -25,7 +27,7 @@ vi.mock('../../../src/services/refresh.js', () => ({
 }));
 
 import { getDatabase } from '../../../src/db/database.js';
-import { buildSearchQuery } from '../../../src/db/queries.js';
+import { buildSearchQuery, buildRandomQuery } from '../../../src/db/queries.js';
 import { checkAndReloadIfChanged } from '../../../src/services/refresh.js';
 
 describe('getItemType', () => {
@@ -444,5 +446,89 @@ describe('getSearchCount', () => {
     await getSearchCount('test');
 
     expect(mockStatement.get).toHaveBeenCalledWith('%test%');
+  });
+});
+
+describe('executeRandom', () => {
+  let mockDb: {
+    prepare: ReturnType<typeof vi.fn>;
+  };
+  let mockStatement: {
+    get: ReturnType<typeof vi.fn>;
+  };
+  let mockDbManager: {
+    getDb: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockStatement = {
+      get: vi.fn(),
+    };
+
+    mockDb = {
+      prepare: vi.fn().mockReturnValue(mockStatement),
+    };
+
+    mockDbManager = {
+      getDb: vi.fn().mockReturnValue(mockDb),
+    };
+
+    vi.mocked(getDatabase).mockReturnValue(mockDbManager as any);
+    vi.mocked(checkAndReloadIfChanged).mockResolvedValue(false);
+    vi.mocked(buildRandomQuery).mockReturnValue({
+      sql: 'SELECT * FROM search_index ORDER BY RANDOM() LIMIT 1',
+      params: [],
+    });
+  });
+
+  it('should return a single random result', async () => {
+    const mockRow = {
+      id: 42,
+      name: 'random_file',
+      itype: ItemType.FILE,
+      file_name: 'random.txt',
+      size: 512,
+      date_change: '2024-03-01T12:00:00.000Z',
+      date_create: '2024-03-01T10:00:00.000Z',
+      id_parent: null,
+      volume_name: 'Drive1',
+      full_path: '/docs/random.txt',
+    };
+
+    mockStatement.get.mockReturnValue(mockRow);
+
+    const result = await executeRandom();
+
+    expect(result.id).toBe(42);
+    expect(result.name).toBe('random.txt');
+    expect(result.path).toBe('/docs/random.txt');
+    expect(result.type).toBe('file');
+  });
+
+  it('should check for database reload', async () => {
+    mockStatement.get.mockReturnValue({
+      id: 1,
+      name: 'f',
+      itype: 1,
+      file_name: 'f',
+      size: 0,
+      date_change: null,
+      date_create: null,
+      id_parent: null,
+      volume_name: null,
+      full_path: null,
+    });
+
+    await executeRandom();
+
+    expect(checkAndReloadIfChanged).toHaveBeenCalled();
+  });
+
+  it('should throw when database is empty', async () => {
+    mockStatement.get.mockReturnValue(undefined);
+
+    await expect(executeRandom()).rejects.toThrow('No items in the database');
   });
 });

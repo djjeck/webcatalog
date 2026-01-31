@@ -5,6 +5,7 @@ import app from '../../src/index.js';
 // Mock the search service
 vi.mock('../../src/services/search.js', () => ({
   executeSearch: vi.fn(),
+  executeRandom: vi.fn(),
 }));
 
 // Mock the refresh service (used by search service)
@@ -13,7 +14,7 @@ vi.mock('../../src/services/refresh.js', () => ({
   getLastReloadTime: vi.fn().mockReturnValue(null),
 }));
 
-import { executeSearch } from '../../src/services/search.js';
+import { executeSearch, executeRandom } from '../../src/services/search.js';
 
 describe('GET /api/search', () => {
   beforeEach(() => {
@@ -193,5 +194,43 @@ describe('GET /api/search', () => {
       undefined,
       undefined
     );
+  });
+});
+
+describe('GET /api/random', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return a random result', async () => {
+    const mockResult = {
+      id: 42,
+      name: 'random.txt',
+      path: '/docs/random.txt',
+      size: 512,
+      dateModified: '2024-03-01T12:00:00.000Z',
+      dateCreated: '2024-03-01T10:00:00.000Z',
+      type: 'file' as const,
+      volumeName: 'Drive1',
+    };
+
+    vi.mocked(executeRandom).mockResolvedValue(mockResult);
+
+    const response = await request(app).get('/api/random');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(mockResult);
+    expect(executeRandom).toHaveBeenCalled();
+  });
+
+  it('should return 500 when service throws error', async () => {
+    vi.mocked(executeRandom).mockRejectedValue(
+      new Error('No items in the database')
+    );
+
+    const response = await request(app).get('/api/random');
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', 'Internal Server Error');
   });
 });

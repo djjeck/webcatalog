@@ -3,11 +3,16 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../src/App';
 import * as api from '../src/services/api';
-import type { SearchResponse, DbStatusResponse } from '../src/types/api';
+import type {
+  SearchResponse,
+  SearchResultItem,
+  DbStatusResponse,
+} from '../src/types/api';
 
 // Mock the API module
 vi.mock('../src/services/api', () => ({
   search: vi.fn(),
+  randomResult: vi.fn(),
   getDbStatus: vi.fn(),
   ApiError: class ApiError extends Error {
     statusCode: number;
@@ -21,6 +26,7 @@ vi.mock('../src/services/api', () => ({
 }));
 
 const mockSearch = vi.mocked(api.search);
+const mockRandomResult = vi.mocked(api.randomResult);
 const mockGetDbStatus = vi.mocked(api.getDbStatus);
 
 describe('App', () => {
@@ -73,12 +79,9 @@ describe('App', () => {
   });
 
   describe('initial render', () => {
-    it('should render app layout with title and components', async () => {
+    it('should render app layout with components', async () => {
       render(<App />);
 
-      // App-specific layout elements
-      expect(screen.getByText('WebCatalog')).toBeInTheDocument();
-      expect(screen.getByText('Search your file catalog')).toBeInTheDocument();
       // Verify components are composed (detailed rendering tested in component unit tests)
       expect(screen.getByPlaceholderText('Search files and folders...')).toBeInTheDocument();
       expect(screen.getByText('Search Your Catalog')).toBeInTheDocument();
@@ -311,6 +314,60 @@ describe('App', () => {
       await waitFor(() => {
         expect(screen.getByText('2 results found')).toBeInTheDocument();
       }, { timeout: 500 });
+    });
+  });
+
+  describe('random button', () => {
+    const mockRandomItem: SearchResultItem = {
+      id: 42,
+      name: 'random-file.txt',
+      path: '/docs/random-file.txt',
+      size: 512,
+      dateModified: '2024-03-01T12:00:00.000Z',
+      dateCreated: '2024-03-01T10:00:00.000Z',
+      type: 'file',
+      volumeName: 'Drive1',
+    };
+
+    it('should render the random button', () => {
+      render(<App />);
+      expect(
+        screen.getByRole('button', { name: 'Get a random result' })
+      ).toBeInTheDocument();
+    });
+
+    it('should display a random result when clicked', async () => {
+      mockRandomResult.mockResolvedValue(mockRandomItem);
+
+      const user = userEvent.setup();
+      render(<App />);
+
+      const button = screen.getByRole('button', {
+        name: 'Get a random result',
+      });
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(screen.getByText('1 result found')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText('random-file.txt')).toBeInTheDocument();
+    });
+
+    it('should show error state when random fails', async () => {
+      mockRandomResult.mockRejectedValue(new Error('Database error'));
+
+      const user = userEvent.setup();
+      render(<App />);
+
+      const button = screen.getByRole('button', {
+        name: 'Get a random result',
+      });
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(screen.getByText('Something Went Wrong')).toBeInTheDocument();
+      });
     });
   });
 });

@@ -5,15 +5,12 @@ import { SearchBar } from '../../src/components/SearchBar';
 
 describe('SearchBar', () => {
   describe('rendering', () => {
-    it('should render input field and help button', () => {
+    it('should render input field', () => {
       const onSearch = vi.fn();
       render(<SearchBar onSearch={onSearch} />);
 
       expect(
         screen.getByPlaceholderText('Search files and folders...')
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: 'Toggle search help' })
       ).toBeInTheDocument();
     });
 
@@ -98,48 +95,6 @@ describe('SearchBar', () => {
       await user.type(input, '   ');
 
       expect(onClear).toHaveBeenCalled();
-    });
-  });
-
-  describe('search help', () => {
-    it('should not show help by default', () => {
-      const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} />);
-
-      expect(screen.queryByText('Search Syntax')).not.toBeInTheDocument();
-    });
-
-    it('should toggle help when help button is clicked', async () => {
-      const user = userEvent.setup();
-      const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} />);
-
-      const helpButton = screen.getByRole('button', {
-        name: 'Toggle search help',
-      });
-
-      // Show help
-      await user.click(helpButton);
-      expect(screen.getByText('Search Syntax')).toBeInTheDocument();
-      expect(helpButton).toHaveAttribute('aria-expanded', 'true');
-
-      // Hide help
-      await user.click(helpButton);
-      expect(screen.queryByText('Search Syntax')).not.toBeInTheDocument();
-      expect(helpButton).toHaveAttribute('aria-expanded', 'false');
-    });
-
-    it('should show search syntax examples when help is visible', async () => {
-      const user = userEvent.setup();
-      const onSearch = vi.fn();
-      render(<SearchBar onSearch={onSearch} />);
-
-      await user.click(
-        screen.getByRole('button', { name: 'Toggle search help' })
-      );
-
-      expect(screen.getByText('Search Syntax')).toBeInTheDocument();
-      expect(screen.getByRole('tooltip')).toBeInTheDocument();
     });
   });
 

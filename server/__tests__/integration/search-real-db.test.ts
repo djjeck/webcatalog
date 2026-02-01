@@ -750,15 +750,15 @@ describe('Exclude patterns integration tests', () => {
       expect(files.length).toBe(0);
     });
 
-    it('should still include folders when minFileSize is set', async () => {
+    it('should also exclude folders below minFileSize', async () => {
       await initDatabase(TEST_DB_PATH, [], 1024 * 1024 * 1024); // 1 GB
 
       const results = executeTestSearch('Archive');
       const folders = results.filter((r) => r.itype === 200);
-      expect(folders.length).toBe(1);
+      expect(folders.length).toBe(0);
     });
 
-    it('should still compute folder sizes from all files including filtered ones', async () => {
+    it('should compute folder sizes from all files including filtered ones', async () => {
       // First get folder size with no filtering
       await initDatabase(TEST_DB_PATH, [], 0);
       const resultsNoFilter = executeTestSearch('Archive');
@@ -766,8 +766,9 @@ describe('Exclude patterns integration tests', () => {
       const sizeNoFilter = folderNoFilter?.size;
       closeDatabase();
 
-      // Then with filtering - folder size should be the same
-      await initDatabase(TEST_DB_PATH, [], 1024 * 1024 * 1024);
+      // Then with a small threshold - folder size should be the same
+      // (filtered files still count toward folder size)
+      await initDatabase(TEST_DB_PATH, [], 1);
       const resultsFiltered = executeTestSearch('Archive');
       const folderFiltered = resultsFiltered.find((r) => r.itype === 200);
 

@@ -173,7 +173,7 @@ EXCLUDE_PATTERNS="@eaDir/*,#recycle/*"
 
 ### Minimum File Size
 
-The `MIN_FILE_SIZE` environment variable excludes files smaller than a given size from search results. This is useful for filtering out small system files or metadata files. Folders are not affected — they always appear in results, and their displayed size still includes all files (even those below the threshold).
+The `MIN_FILE_SIZE` environment variable excludes files and folders smaller than a given size from search results. This is useful for filtering out small system files or metadata files. Folder sizes are computed from all descendant files (including those below the threshold), then folders whose total size is still below the threshold are also excluded.
 
 **Format:** A number followed by a unit: `b`, `kb`, `mb`, or `gb` (case insensitive).
 

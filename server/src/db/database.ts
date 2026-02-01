@@ -206,6 +206,15 @@ class DatabaseManager {
       WHERE search_index.itype = ${ItemType.FOLDER}
     `);
 
+    // Remove folders below the minimum file size threshold
+    if (this.minFileSize > 0) {
+      this.db.exec(
+        `DELETE FROM search_index
+         WHERE itype = ${ItemType.FOLDER}
+           AND COALESCE(size, 0) < ${this.minFileSize}`
+      );
+    }
+
     // Create index on name for fast LIKE searches
     this.db.exec(
       'CREATE INDEX idx_search_name ON search_index(name COLLATE NOCASE)'

@@ -279,8 +279,8 @@
 }
 
 .result-item-volume-badge {
-  font-size: 0.6875rem;
   font-weight: 600;
+  line-height: 1.5em;
   color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -313,7 +313,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
-  margin-top: 0.5rem;
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }
@@ -552,11 +551,6 @@
 }
 
 @media (max-width: 480px) {
-  .result-item-meta {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
   .status-bar {
     justify-content: center;
     flex-wrap: wrap;

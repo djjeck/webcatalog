@@ -35,5 +35,11 @@ jobs:
       - name: Run tests with coverage
         run: npm run test:coverage
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
       - name: Build Docker image
         run: docker build -t webcatalog:ci-test .

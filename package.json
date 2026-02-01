@@ -16,12 +16,19 @@
     "lint:fix": "npm run lint:fix --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "format": "npm run format --workspaces",
-    "format:check": "npm run format:check --workspaces"
+    "format:check": "npm run format:check --workspaces",
+    "test:e2e": "playwright test"
   },
-  "keywords": ["wincatalog", "search", "sqlite", "web"],
+  "keywords": [
+    "wincatalog",
+    "search",
+    "sqlite",
+    "web"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.58.1",
     "concurrently": "^9.1.2"
   }
 }

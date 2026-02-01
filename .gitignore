@@ -45,3 +45,8 @@ temp/
 
 # Vitest
 .vitest/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/

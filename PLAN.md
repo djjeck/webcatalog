@@ -412,7 +412,7 @@ webcatalog/
    - Test Docker build with full app
    - Test in Docker container locally
 
-⬜ **5.3 Integration Testing**
+✅ **5.3 Integration Testing**
    - Test full search flow from UI to database
    - Test error scenarios:
      - Missing database file

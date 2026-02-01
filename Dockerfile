@@ -35,7 +35,21 @@ RUN npm run build --workspace=server
 RUN npm run build --workspace=client
 
 # =============================================================================
-# Stage 2: Production stage
+# Stage 2: Install production dependencies only
+# =============================================================================
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY server/package.json ./server/
+COPY client/package.json ./client/
+
+RUN npm ci --omit=dev && \
+    npm cache clean --force
+
+# =============================================================================
+# Stage 3: Production stage
 # =============================================================================
 FROM node:20-alpine AS production
 
@@ -48,14 +62,11 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy root package files and server package file
-COPY package*.json ./
-COPY server/package.json ./server/
-COPY client/package.json ./client/
-
-# Install only production dependencies
-RUN npm ci --omit=dev && \
-    npm cache clean --force
+# Copy production dependencies (pre-built native modules from deps stage)
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/server/node_modules ./server/node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/server/package.json ./server/package.json
 
 # Copy built server application from builder stage
 COPY --from=builder /app/server/dist ./server/dist

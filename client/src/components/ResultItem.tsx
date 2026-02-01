@@ -32,18 +32,11 @@ export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
       className={`result-item result-item-${item.type}`}
       data-testid="result-item"
     >
-      <div className="result-item-sidebar">
-        <div className="result-item-icon" aria-hidden="true">
-          {getTypeIcon(item.type)}
-        </div>
-        {item.volumeName && (
-          <div className="result-item-volume-badge" title={item.volumeName}>
-            <span aria-hidden="true">📦</span> {item.volumeName}
-          </div>
-        )}
-      </div>
       <div className="result-item-content">
         <div className="result-item-name">
+          <div className="result-item-icon" aria-hidden="true">
+            {getTypeIcon(item.type)}
+          </div>
           {highlightTerms(item.name, searchTerms)}
         </div>
         <div className="result-item-path" title={fullPath}>
@@ -57,6 +50,11 @@ export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
             </span>
           )}
         </div>
+        {item.volumeName && (
+          <div className="result-item-volume-badge" title={item.volumeName}>
+            <span aria-hidden="true">📦</span> {item.volumeName}
+          </div>
+        )}
       </div>
     </div>
   );

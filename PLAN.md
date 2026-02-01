@@ -156,7 +156,6 @@ webcatalog/
 #### Acceptance Criteria:
 - ✅ `docs/DATABASE_SCHEMA.md` documents all relevant tables and columns
 - ✅ TypeScript types accurately represent database schema
-- ⬜ Types are shared between frontend and backend
 - ✅ Schema extraction script runs successfully on sample database
 - ✅ `npm run typecheck` passes
 
@@ -295,9 +294,9 @@ webcatalog/
 - ✅ No lint errors: `npm run lint`
 - ✅ Backend server runs without errors
 - ✅ Manual testing shows search returns expected results
-- ⬜ Docker image builds and runs successfully
-- ⬜ GitHub Actions CI workflow passes
-- ⬜ Docker container serves API endpoints correctly
+- ✅ Docker image builds and runs successfully
+- ✅ GitHub Actions CI workflow passes
+- ✅ Docker container serves API endpoints correctly
 
 ---
 
@@ -429,13 +428,13 @@ webcatalog/
    - Optimize queries if needed
 
 #### Acceptance Criteria:
-- ⬜ Frontend successfully communicates with backend
-- ⬜ Search works end-to-end with real database
-- ⬜ Error handling works in all scenarios
-- ⬜ Database reload works when file changes
-- ⬜ Performance is acceptable (<1s for most searches)
-- ⬜ All tests pass with >80% coverage
-- ⬜ Docker image serves complete app (API + UI)
+- ✅ Frontend successfully communicates with backend
+- ✅ Search works end-to-end with real database
+- ✅ Error handling works in all scenarios
+- ✅ Database reload works when file changes
+- ✅ Performance is acceptable (<1s for most searches)
+- ✅ All tests pass with >80% coverage
+- ✅ Docker image serves complete app (API + UI)
 
 ---
 

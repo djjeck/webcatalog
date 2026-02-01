@@ -34,9 +34,9 @@ export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
     >
       <div className="result-item-content">
         <div className="result-item-name">
-          <div className="result-item-icon" aria-hidden="true">
+          <span className="result-item-icon" aria-hidden="true">
             {getTypeIcon(item.type)}
-          </div>
+          </span>
           {highlightTerms(item.name, searchTerms)}
         </div>
         <div className="result-item-path" title={fullPath}>
@@ -52,7 +52,10 @@ export function ResultItem({ item, searchTerms = [] }: ResultItemProps) {
         </div>
         {item.volumeName && (
           <div className="result-item-volume-badge" title={item.volumeName}>
-            <span aria-hidden="true">📦</span> {item.volumeName}
+            <span className="volume-badge-icon" aria-hidden="true">
+              📦
+            </span>
+            {item.volumeName}
           </div>
         )}
       </div>

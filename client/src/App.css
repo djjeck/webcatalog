@@ -274,17 +274,14 @@
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
 
-.result-item-icon {
-  font-size: 1.25rem;
-  line-height: 1;
+.result-item-icon, .volume-badge-icon {
+  margin-right: 5px;
 }
 
 .result-item-volume-badge {
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  text-align: center;
-  max-width: 5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -555,18 +552,6 @@
 }
 
 @media (max-width: 480px) {
-<<<<<<< HEAD
-  .search-form {
-    flex-direction: column;
-  }
-
-  .search-button {
-    width: 100%;
-  }
-
-
-=======
->>>>>>> 66eb1bb (f)
   .result-item-meta {
     flex-direction: column;
     gap: 0.25rem;

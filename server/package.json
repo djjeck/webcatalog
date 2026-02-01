@@ -11,8 +11,8 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\""
@@ -38,14 +38,15 @@
     "@types/node": "^25.1.0",
     "@types/node-cron": "^3.0.11",
     "@types/supertest": "^6.0.2",
-    "@typescript-eslint/eslint-plugin": "^6.17.0",
-    "@typescript-eslint/parser": "^6.17.0",
+    "@eslint/js": "^9.39.1",
     "@vitest/coverage-v8": "^4.0.18",
-    "eslint": "^8.56.0",
+    "eslint": "^9.39.1",
+    "globals": "^17.0.0",
     "prettier": "^3.8.1",
     "supertest": "^6.3.3",
     "tsx": "^4.7.0",
     "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
     "vitest": "^4.0.18"
   }
 }

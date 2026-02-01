@@ -12,7 +12,7 @@ vi.mock('fs/promises', () => ({
   stat: vi.fn(),
 }));
 
-// Mock better-sqlite3 with exec support for the new architecture
+// Mock better-sqlite3 with support for the iterative JS architecture
 vi.mock('better-sqlite3', () => {
   const createMockDb = () => ({
     close: vi.fn(),
@@ -20,7 +20,9 @@ vi.mock('better-sqlite3', () => {
     prepare: vi.fn(() => ({
       all: vi.fn(() => []),
       get: vi.fn(() => ({ count: 0 })),
+      run: vi.fn(),
     })),
+    transaction: vi.fn((fn: () => void) => fn),
   });
 
   return {
@@ -50,21 +52,20 @@ describe('Database Manager', () => {
       await initDatabase(mockDbPath, []);
 
       expect(stat).toHaveBeenCalledWith(mockDbPath);
-      // New architecture creates in-memory database
+      // Opens source DB read-only, then creates in-memory DB
+      expect(Database).toHaveBeenCalledWith(mockDbPath, { readonly: true });
       expect(Database).toHaveBeenCalledWith(':memory:');
     });
 
-    it('should attach source database and create search_index', async () => {
+    it('should create search_index table in memory', async () => {
       await initDatabase(mockDbPath, []);
 
       const db = getDatabase().getDb();
-      // Should call exec for ATTACH, CREATE TABLE, INSERT, CREATE INDEX, DETACH
       expect(db.exec).toHaveBeenCalled();
       const execCalls = vi.mocked(db.exec).mock.calls;
 
-      // First call: ATTACH source database
-      expect(execCalls[0][0]).toContain('ATTACH DATABASE');
-      expect(execCalls[0][0]).toContain(mockDbPath);
+      // First exec call creates the search_index table
+      expect(execCalls[0][0]).toContain('CREATE TABLE search_index');
     });
 
     it('should close existing connection before reinitializing', async () => {
@@ -204,7 +205,6 @@ describe('Database Manager', () => {
       await getDatabase().reload();
 
       expect(originalDb.close).toHaveBeenCalled();
-      expect(Database).toHaveBeenCalledTimes(2); // Initial + reload
     });
   });
 

@@ -56,6 +56,18 @@ services:
       # Optional: exclude files smaller than a given size (e.g. 100kb, 5MB, 1gb)
       - MIN_FILE_SIZE=100kb
     restart: unless-stopped
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    # Logging configuration
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 ```
 
 2. Start the service:

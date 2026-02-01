@@ -14,7 +14,7 @@ vi.mock('fs/promises', () => ({
 
 // Mock better-sqlite3 with support for the iterative JS architecture
 vi.mock('better-sqlite3', () => {
-  const createMockDb = () => ({
+  const createMockDb = function () { return {
     close: vi.fn(),
     exec: vi.fn(),
     prepare: vi.fn(() => ({
@@ -23,7 +23,7 @@ vi.mock('better-sqlite3', () => {
       run: vi.fn(),
     })),
     transaction: vi.fn((fn: () => void) => fn),
-  });
+  }; };
 
   return {
     default: vi.fn(createMockDb),

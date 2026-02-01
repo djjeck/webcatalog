@@ -185,6 +185,10 @@ describe('errorHandler middleware', () => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   it('should handle AppError and send response', () => {
     const error = new BadRequestError('Invalid input');
 

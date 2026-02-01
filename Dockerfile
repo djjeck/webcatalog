@@ -46,7 +46,8 @@ COPY server/package.json ./server/
 COPY client/package.json ./client/
 
 RUN npm ci --omit=dev && \
-    npm cache clean --force
+    npm cache clean --force && \
+    mkdir -p /app/server/node_modules
 
 # =============================================================================
 # Stage 3: Production stage

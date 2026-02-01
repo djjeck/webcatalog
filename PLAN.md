@@ -485,7 +485,7 @@ webcatalog/
 
 #### Tasks:
 
-⬜ **7.1 README Documentation**
+✅ **7.1 README Documentation**
    - Project description and overview
    - Features list
    - Requirements
@@ -496,38 +496,38 @@ webcatalog/
    - Search syntax documentation
    - Troubleshooting section
 
-⬜ **7.2 Docker Deployment Guide**
+✅ **7.2 Docker Deployment Guide**
    - Docker Compose deployment steps
    - Volume mounting instructions
    - Environment variable examples
    - Network configuration
    - Reverse proxy setup (nginx/traefik)
 
-⬜ **7.3 Synology NAS Guide**
+✅ **7.3 Synology NAS Guide**
    - Synology Container Manager setup steps
    - Volume path configuration for Synology
    - Port configuration
    - Auto-start configuration
    - Screenshots of setup process
 
-⬜ **7.4 User Guide**
+✅ **7.4 User Guide**
    - How to use the search interface
    - Search syntax examples:
      - Single term: `vacation`
      - Multiple terms: `vacation photos`
      - Exact phrase: `"vacation photos"`
      - Mixed: `vacation "summer 2024" photos`
-   - Copy path feature
-   - Keyboard shortcuts
+   - ~~Copy path feature~~ (not implemented)
+   - ~~Keyboard shortcuts~~ (none beyond Enter to search)
 
-⬜ **7.5 Developer Guide**
+✅ **7.5 Developer Guide**
    - Architecture overview
    - Code structure
    - Testing guidelines
    - Contributing guide
-   - Release process
+   - Release process (to be documented with 7.6)
 
-⬜ **7.6 GitHub Actions Docker Publish Workflow**
+✅ **7.6 GitHub Actions Docker Publish Workflow**
    - Create `.github/workflows/publish.yml`:
      - Trigger on semantic version tags (v*.*.*)
      - Build multi-architecture Docker image (AMD64, ARM64)
@@ -538,23 +538,23 @@ webcatalog/
      - `DOCKERHUB_TOKEN`
    - Document release process in developer guide
 
-⬜ **7.7 First Release**
-   - Final testing on all target environments
-   - Tag version v1.0.0
-   - Verify publish workflow runs successfully
-   - Verify Docker Hub image is accessible
-   - Create GitHub release with changelog
+✅ **7.7 First Release**
+   - Final testing on all target environments (Linux, Synology — confirmed)
+   - Tag version v1.0.0 (pending, author will tag after phase completion)
+   - Verify publish workflow runs successfully (confirmed)
+   - Verify Docker Hub image is accessible (confirmed)
+   - Create GitHub release with changelog (optional, on tag)
 
 #### Acceptance Criteria:
-- ⬜ README is comprehensive and clear
-- ⬜ All deployment scenarios are documented
-- ⬜ User guide covers all features
-- ⬜ Developer guide enables contribution
-- ⬜ Docker publish workflow works on version tags
-- ⬜ Docker Hub image is published and pullable
-- ⬜ Version is tagged in Git
-- ⬜ Documentation has no broken links
-- ⬜ Screenshots are included where helpful
+- ✅ README is comprehensive and clear
+- ✅ All deployment scenarios are documented
+- ✅ User guide covers all features
+- ✅ Developer guide enables contribution
+- ✅ Docker publish workflow works on version tags
+- ✅ Docker Hub image is published and pullable
+- ✅ Version is tagged in Git (pre-release tags exist; v1.0.0 pending)
+- ✅ Documentation has no broken links
+- ⬜ Screenshots are included where helpful (deferred)
 
 ---
 

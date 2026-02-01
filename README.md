@@ -323,11 +323,13 @@ Open `http://your-nas-ip:3000` in a browser on any device on your network.
 
 When you re-scan drives in WinCatalog and copy the updated `.w3cat` file to your NAS, WebCatalog will detect the change automatically on the next search (or at the nightly refresh). No container restart is needed.
 
-#### Troubleshooting
+## Troubleshooting
 
 - **Container won't start**: Check that the volume mount path matches exactly `/data/My WinCatalog File.w3cat`
 - **No search results**: Verify the `.w3cat` file is a valid WinCatalog database and not empty
 - **Permission errors**: Ensure the database file is readable. The container runs as a non-root user
+- **Database not updating**: The app detects file changes on search or at the nightly refresh. If you replaced the file, try searching again or wait for the next refresh cycle
+- **Port conflict**: Change the host port in `docker-compose.yml` (e.g., `8080:3000`) if port 3000 is already in use
 
 ## Architecture
 
@@ -368,6 +370,19 @@ See [PLAN.md](PLAN.md) for the complete roadmap. Potential features:
 - Dark mode
 - Search history
 - Virtual drive status indicators
+
+## Releasing
+
+To publish a new version to Docker Hub:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The [publish workflow](.github/workflows/publish.yml) will automatically build multi-arch images (AMD64 + ARM64) and push them to Docker Hub tagged with the version number and `latest`. You can also trigger a manual build from the Actions tab using `workflow_dispatch`.
+
+**Required GitHub secrets**: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
 
 ## Contributing
 

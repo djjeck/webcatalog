@@ -279,17 +279,43 @@ docker compose restart
 
 ### Synology NAS
 
-1. Open **Container Manager** (formerly Docker)
-2. Go to **Registry** and search for `webcatalog` (or upload manually)
-3. Download the image
-4. Go to **Image** and launch the container
-5. Configure:
-   - **Port**: Map local port 3000 to container port 3000
-   - **Volume**: Mount your `.w3cat` file to `/data/My WinCatalog File.w3cat` (read-only)
-   - **Environment**: Set `DB_PATH` if needed
-6. Start the container
+#### Installing the Image
 
-The web interface will be available at `http://your-nas-ip:3000`
+1. Open **Container Manager** (formerly Docker) on your Synology NAS
+2. Go to **Registry**, search for `djjeck/webcatalog`, and download the `latest` tag
+   - The image supports both AMD64 and ARM64, so it works on Intel and ARM-based Synology models
+
+#### Creating the Container
+
+1. Go to **Image**, select `djjeck/webcatalog`, and click **Run**
+2. **General Settings**:
+   - Give the container a name (e.g., `webcatalog`)
+   - Enable **auto-restart** if desired
+3. **Port Settings**:
+   - Map a local port (e.g., `3000`) to container port `3000`
+4. **Volume Settings**:
+   - Click **Add File** and select your `.w3cat` database file
+   - Set the mount path to `/data/My WinCatalog File.w3cat`
+   - Enable **Read-Only**
+5. **Environment Variables** (optional):
+   - `EXCLUDE_PATTERNS` — filter out NAS metadata, e.g., `@eaDir/*,#recycle/*,Thumbs.db,.DS_Store`
+   - `MIN_FILE_SIZE` — exclude small files, e.g., `100kb`
+   - `NIGHTLY_REFRESH_HOUR` — hour (0–23) for automatic DB reload (default: `0`)
+6. Click **Done** to create and start the container
+
+#### Accessing the Interface
+
+Open `http://your-nas-ip:3000` in a browser on any device on your network.
+
+#### Updating the Database
+
+When you re-scan drives in WinCatalog and copy the updated `.w3cat` file to your NAS, WebCatalog will detect the change automatically on the next search (or at the nightly refresh). No container restart is needed.
+
+#### Troubleshooting
+
+- **Container won't start**: Check that the volume mount path matches exactly `/data/My WinCatalog File.w3cat`
+- **No search results**: Verify the `.w3cat` file is a valid WinCatalog database and not empty
+- **Permission errors**: Ensure the database file is readable. The container runs as a non-root user
 
 ## Architecture
 

@@ -458,7 +458,7 @@ webcatalog/
      - Remove unnecessary packages
      - Set read-only filesystem where possible
 
-⬜ **6.3 Synology NAS Testing**
+✅ **6.3 Synology NAS Testing**
    - Test Docker image on Synology NAS (if available)
    - Verify volume mounts work correctly
    - Test Container Manager configuration

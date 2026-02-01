@@ -443,7 +443,7 @@ webcatalog/
 
 #### Tasks:
 
-⬜ **6.1 Multi-Architecture Support**
+✅ **6.1 Multi-Architecture Support**
    - Configure Docker buildx for multi-arch builds
    - Build for AMD64 (Intel/AMD) and ARM64 (Apple Silicon, Synology)
    - Test builds on both architectures

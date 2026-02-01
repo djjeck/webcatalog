@@ -250,12 +250,19 @@ All checks run automatically and must pass before committing.
 ### Building the Docker Image
 
 ```bash
-# Build locally
+# Build for the current platform
 docker build -t webcatalog .
 
-# Or use docker compose
-docker compose build
+# Build for multiple architectures (AMD64 + ARM64)
+docker buildx build --platform linux/amd64,linux/arm64 -t webcatalog .
+
+# Build and push multi-arch image to a registry
+docker buildx build --platform linux/amd64,linux/arm64 -t your-registry/webcatalog:latest --push .
 ```
+
+> **Note:** Multi-arch builds require Docker Buildx (included with Docker Desktop).
+> The published Docker Hub image (`djjeck/webcatalog`) supports both AMD64 (Intel/AMD)
+> and ARM64 (Apple Silicon, Synology NAS) architectures.
 
 ### Managing the Container
 

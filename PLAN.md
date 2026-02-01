@@ -471,12 +471,12 @@ webcatalog/
    - Add network configuration for reverse proxy
 
 #### Acceptance Criteria:
-- ⬜ Multi-architecture builds work (AMD64 and ARM64)
-- ⬜ Image size is reasonable (<500MB)
-- ⬜ Container runs as non-root user
-- ⬜ Container restarts on failure
-- ⬜ All features work in containerized environment
-- ⬜ Synology NAS deployment works (if tested)
+- ✅ Multi-architecture builds work (AMD64 and ARM64)
+- ✅ Image size is reasonable (<500MB)
+- ✅ Container runs as non-root user
+- ✅ Container restarts on failure
+- ✅ All features work in containerized environment
+- ✅ Synology NAS deployment works (if tested)
 
 ---
 

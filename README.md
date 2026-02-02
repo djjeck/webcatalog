@@ -49,7 +49,6 @@ services:
       # Replace with your actual database path
       - /path/to/your/My WinCatalog File.w3cat:/data/My WinCatalog File.w3cat:ro
     environment:
-      - NIGHTLY_REFRESH_HOUR=0
       - PORT=3000
       # Optional: exclude system/temp files from search results
       - EXCLUDE_PATTERNS=@eaDir/*,*.tmp,Thumbs.db,.DS_Store
@@ -155,15 +154,14 @@ All searches are case-insensitive and match partial words.
 
 ## Environment Variables
 
-| Variable               | Description                             | Default                          |
-| ---------------------- | --------------------------------------- | -------------------------------- |
-| `DB_PATH`              | Path to WinCatalog `.w3cat` file        | `/data/My WinCatalog File.w3cat` |
-| `EXCLUDE_PATTERNS`     | Comma-separated patterns to exclude     | (none)                           |
-| `PORT`                 | Server port                             | `3000`                           |
-| `NODE_ENV`             | Environment (development/production)    | `production`                     |
-| `MIN_FILE_SIZE`        | Minimum file size to include in results | (none)                           |
-| `NIGHTLY_REFRESH_HOUR` | Hour (0-23) for automatic DB reload     | `0` (midnight)                   |
-| `STATIC_PATH`          | Path to static files directory (the UI) | `./public`                       |
+| Variable           | Description                             | Default                          |
+| ------------------ | --------------------------------------- | -------------------------------- |
+| `DB_PATH`          | Path to WinCatalog `.w3cat` file        | `/data/My WinCatalog File.w3cat` |
+| `EXCLUDE_PATTERNS` | Comma-separated patterns to exclude     | (none)                           |
+| `PORT`             | Server port                             | `3000`                           |
+| `NODE_ENV`         | Environment (development/production)    | `production`                     |
+| `MIN_FILE_SIZE`    | Minimum file size to include in results | (none)                           |
+| `STATIC_PATH`      | Path to static files directory (the UI) | `./public`                       |
 
 ### Exclude Patterns
 
@@ -312,7 +310,6 @@ docker compose restart
 5. **Environment Variables** (optional):
    - `EXCLUDE_PATTERNS` — filter out NAS metadata, e.g., `@eaDir/*,#recycle/*,Thumbs.db,.DS_Store`
    - `MIN_FILE_SIZE` — exclude small files, e.g., `100kb`
-   - `NIGHTLY_REFRESH_HOUR` — hour (0–23) for automatic DB reload (default: `0`)
 6. Click **Done** to create and start the container
 
 #### Accessing the Interface
@@ -321,14 +318,14 @@ Open `http://your-nas-ip:3000` in a browser on any device on your network.
 
 #### Updating the Database
 
-When you re-scan drives in WinCatalog and copy the updated `.w3cat` file to your NAS, WebCatalog will detect the change automatically on the next search (or at the nightly refresh). No container restart is needed.
+When you re-scan drives in WinCatalog and copy the updated `.w3cat` file to your NAS, WebCatalog will detect the change to the savefile automatically. No container restart is needed.
 
 ## Troubleshooting
 
 - **Container won't start**: Check that the volume mount path matches exactly `/data/My WinCatalog File.w3cat`
 - **No search results**: Verify the `.w3cat` file is a valid WinCatalog database and not empty
 - **Permission errors**: Ensure the database file is readable. The container runs as a non-root user
-- **Database not updating**: The app detects file changes on search or at the nightly refresh. If you replaced the file, try searching again or wait for the next refresh cycle
+- **Database not updating**: The app detects file changes on savefile change, on each search, or at the hourly refresh. If you replaced the file, try searching again or wait for the next refresh cycle. Restarting the container will also force a refresh
 - **Port conflict**: Change the host port in `docker-compose.yml` (e.g., `8080:3000`) if port 3000 is already in use
 
 ## Architecture
@@ -339,7 +336,7 @@ When you re-scan drives in WinCatalog and copy the updated `.w3cat` file to your
 - **better-sqlite3** for fast, synchronous SQLite access
 - **Read-only** database access for safety
 - **Auto-reload** on database file changes
-- **Nightly refresh** for reliability
+- **Hourly DB refresh** for reliability
 
 ### Frontend
 

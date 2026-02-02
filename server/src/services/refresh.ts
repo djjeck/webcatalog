@@ -1,6 +1,6 @@
 /**
  * Database refresh service for WinCatalog database
- * Handles on-demand refresh and scheduled nightly refresh
+ * Handles on-demand refresh, file watching, and scheduled hourly refresh
  */
 
 import { watch, type FSWatcher } from 'fs';
@@ -47,22 +47,17 @@ export function getLastReloadTime(): Date | null {
 }
 
 /**
- * Schedule nightly database refresh
- * @param hour - Hour of the day (0-23) to run refresh. Default is 0 (midnight)
+ * Schedule hourly database refresh as a safety net.
+ * Since checkAndReloadIfChanged only stats the file, this is very cheap
+ * when nothing has changed. Catches cases where fs.watch misses events
+ * (e.g. network filesystems, Docker volume mounts).
  */
-export function scheduleNightlyRefresh(hour: number = 0): void {
-  // Validate hour
-  const validHour = Math.max(0, Math.min(23, Math.floor(hour)));
-
+export function scheduleHourlyRefresh(): void {
   // Stop any existing scheduled task
   stopScheduledRefresh();
 
-  // Create cron expression for the specified hour
-  // Format: minute hour * * * (at minute 0 of the specified hour, every day)
-  const cronExpression = `0 ${validHour} * * *`;
-
-  scheduledTask = cron.schedule(cronExpression, async () => {
-    console.log(`Running scheduled nightly refresh at hour ${validHour}`);
+  scheduledTask = cron.schedule('0 * * * *', async () => {
+    console.log('Running scheduled hourly refresh check');
     try {
       await checkAndReloadIfChanged();
     } catch (error) {
@@ -70,9 +65,7 @@ export function scheduleNightlyRefresh(hour: number = 0): void {
     }
   });
 
-  console.log(
-    `Scheduled nightly refresh at ${validHour}:00 (cron: ${cronExpression})`
-  );
+  console.log('Scheduled hourly refresh check (cron: 0 * * * *)');
 }
 
 /**

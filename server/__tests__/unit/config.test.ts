@@ -28,7 +28,6 @@ describe('Config Module', () => {
     it('should return default values when no env vars set', () => {
       delete process.env.DB_PATH;
       delete process.env.PORT;
-      delete process.env.NIGHTLY_REFRESH_HOUR;
       delete process.env.NODE_ENV;
       delete process.env.STATIC_PATH;
       delete process.env.SERVE_STATIC;
@@ -38,7 +37,6 @@ describe('Config Module', () => {
 
       expect(config.dbPath).toBe('/data/My WinCatalog File.w3cat');
       expect(config.port).toBe(3000);
-      expect(config.nightlyRefreshHour).toBe(0);
       expect(config.nodeEnv).toBe('development');
       expect(config.staticPath).toBe('./public');
       expect(config.serveStatic).toBe(false); // false in development by default
@@ -68,14 +66,6 @@ describe('Config Module', () => {
       const config = loadConfig();
 
       expect(config.port).toBe(8080);
-    });
-
-    it('should read NIGHTLY_REFRESH_HOUR from environment', () => {
-      process.env.NIGHTLY_REFRESH_HOUR = '3';
-
-      const config = loadConfig();
-
-      expect(config.nightlyRefreshHour).toBe(3);
     });
 
     it('should read NODE_ENV from environment', () => {
@@ -154,52 +144,6 @@ describe('Config Module', () => {
       expect(config.port).toBe(3000);
     });
 
-    it('should use default for NIGHTLY_REFRESH_HOUR outside range (too high)', () => {
-      process.env.NIGHTLY_REFRESH_HOUR = '25';
-
-      const config = loadConfig();
-
-      expect(config.nightlyRefreshHour).toBe(0);
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid refresh hour')
-      );
-    });
-
-    it('should use default for NIGHTLY_REFRESH_HOUR outside range (negative)', () => {
-      process.env.NIGHTLY_REFRESH_HOUR = '-5';
-
-      const config = loadConfig();
-
-      expect(config.nightlyRefreshHour).toBe(0);
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid refresh hour')
-      );
-    });
-
-    it('should accept valid NIGHTLY_REFRESH_HOUR at boundary (0)', () => {
-      process.env.NIGHTLY_REFRESH_HOUR = '0';
-
-      const config = loadConfig();
-
-      expect(config.nightlyRefreshHour).toBe(0);
-    });
-
-    it('should accept valid NIGHTLY_REFRESH_HOUR at boundary (23)', () => {
-      process.env.NIGHTLY_REFRESH_HOUR = '23';
-
-      const config = loadConfig();
-
-      expect(config.nightlyRefreshHour).toBe(23);
-    });
-
-    it('should use default for invalid NIGHTLY_REFRESH_HOUR', () => {
-      process.env.NIGHTLY_REFRESH_HOUR = 'midnight';
-
-      const config = loadConfig();
-
-      expect(config.nightlyRefreshHour).toBe(0);
-    });
-
     it('should parse EXCLUDE_PATTERNS as comma-separated list', () => {
       process.env.EXCLUDE_PATTERNS = '*.tmp,@eaDir/*,Thumbs.db';
 
@@ -246,7 +190,6 @@ describe('Config Module', () => {
       const config: Config = {
         dbPath: '/custom/path.w3cat',
         port: 3000,
-        nightlyRefreshHour: 0,
         nodeEnv: 'development',
         isProduction: false,
         isDevelopment: true,
@@ -266,7 +209,6 @@ describe('Config Module', () => {
       const config: Config = {
         dbPath: '/path.w3cat',
         port: 0,
-        nightlyRefreshHour: 0,
         nodeEnv: 'development',
         isProduction: false,
         isDevelopment: true,
@@ -287,7 +229,6 @@ describe('Config Module', () => {
       const config: Config = {
         dbPath: '/path.w3cat',
         port: 70000,
-        nightlyRefreshHour: 0,
         nodeEnv: 'development',
         isProduction: false,
         isDevelopment: true,
@@ -308,7 +249,6 @@ describe('Config Module', () => {
       const configLow: Config = {
         dbPath: '/path.w3cat',
         port: 1,
-        nightlyRefreshHour: 0,
         nodeEnv: 'development',
         isProduction: false,
         isDevelopment: true,
@@ -322,7 +262,6 @@ describe('Config Module', () => {
       const configHigh: Config = {
         dbPath: '/path.w3cat',
         port: 65535,
-        nightlyRefreshHour: 0,
         nodeEnv: 'development',
         isProduction: false,
         isDevelopment: true,
@@ -341,7 +280,6 @@ describe('Config Module', () => {
       const config: Config = {
         dbPath: '/data/catalog.w3cat',
         port: 0,
-        nightlyRefreshHour: 0,
         nodeEnv: 'production',
         isProduction: true,
         isDevelopment: false,

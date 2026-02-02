@@ -11,7 +11,7 @@ import cron from 'node-cron';
 import {
   checkAndReloadIfChanged,
   getLastReloadTime,
-  scheduleNightlyRefresh,
+  scheduleHourlyRefresh,
   stopScheduledRefresh,
   isScheduledRefreshActive,
   startWatching,
@@ -134,7 +134,7 @@ describe('Database Refresh Service', () => {
     });
   });
 
-  describe('scheduleNightlyRefresh', () => {
+  describe('scheduleHourlyRefresh', () => {
     let mockScheduledTask: {
       stop: ReturnType<typeof vi.fn>;
     };
@@ -146,68 +146,32 @@ describe('Database Refresh Service', () => {
       vi.mocked(cron.schedule).mockReturnValue(mockScheduledTask as any);
     });
 
-    it('should schedule task at default midnight hour', () => {
-      scheduleNightlyRefresh();
+    it('should schedule an hourly cron task', () => {
+      scheduleHourlyRefresh();
 
       expect(cron.schedule).toHaveBeenCalledWith(
-        '0 0 * * *',
-        expect.any(Function)
-      );
-    });
-
-    it('should schedule task at specified hour', () => {
-      scheduleNightlyRefresh(3);
-
-      expect(cron.schedule).toHaveBeenCalledWith(
-        '0 3 * * *',
-        expect.any(Function)
-      );
-    });
-
-    it('should clamp hour to valid range (0-23)', () => {
-      scheduleNightlyRefresh(25);
-
-      expect(cron.schedule).toHaveBeenCalledWith(
-        '0 23 * * *',
-        expect.any(Function)
-      );
-    });
-
-    it('should clamp negative hour to 0', () => {
-      scheduleNightlyRefresh(-5);
-
-      expect(cron.schedule).toHaveBeenCalledWith(
-        '0 0 * * *',
-        expect.any(Function)
-      );
-    });
-
-    it('should floor decimal hours', () => {
-      scheduleNightlyRefresh(5.7);
-
-      expect(cron.schedule).toHaveBeenCalledWith(
-        '0 5 * * *',
+        '0 * * * *',
         expect.any(Function)
       );
     });
 
     it('should stop existing task before scheduling new one', () => {
-      scheduleNightlyRefresh(1);
-      scheduleNightlyRefresh(2);
+      scheduleHourlyRefresh();
+      scheduleHourlyRefresh();
 
       expect(mockScheduledTask.stop).toHaveBeenCalled();
     });
 
     it('should log scheduled refresh info', () => {
-      scheduleNightlyRefresh(3);
+      scheduleHourlyRefresh();
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Scheduled nightly refresh at 3:00')
+        expect.stringContaining('Scheduled hourly refresh check')
       );
     });
 
     it('should mark refresh as active after scheduling', () => {
-      scheduleNightlyRefresh();
+      scheduleHourlyRefresh();
 
       expect(isScheduledRefreshActive()).toBe(true);
     });
@@ -224,7 +188,7 @@ describe('Database Refresh Service', () => {
           }
         );
 
-        scheduleNightlyRefresh(0);
+        scheduleHourlyRefresh();
         await capturedCallback!();
 
         expect(mockDbManager.reloadIfChanged).toHaveBeenCalled();
@@ -242,7 +206,7 @@ describe('Database Refresh Service', () => {
           }
         );
 
-        scheduleNightlyRefresh(0);
+        scheduleHourlyRefresh();
         await capturedCallback!();
 
         expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -266,21 +230,21 @@ describe('Database Refresh Service', () => {
     });
 
     it('should stop active scheduled task', () => {
-      scheduleNightlyRefresh();
+      scheduleHourlyRefresh();
       stopScheduledRefresh();
 
       expect(mockScheduledTask.stop).toHaveBeenCalled();
     });
 
     it('should mark refresh as inactive after stopping', () => {
-      scheduleNightlyRefresh();
+      scheduleHourlyRefresh();
       stopScheduledRefresh();
 
       expect(isScheduledRefreshActive()).toBe(false);
     });
 
     it('should log when stopping', () => {
-      scheduleNightlyRefresh();
+      scheduleHourlyRefresh();
       stopScheduledRefresh();
 
       expect(consoleLogSpy).toHaveBeenCalledWith('Scheduled refresh stopped');
@@ -308,13 +272,13 @@ describe('Database Refresh Service', () => {
     });
 
     it('should return true when task is scheduled', () => {
-      scheduleNightlyRefresh();
+      scheduleHourlyRefresh();
 
       expect(isScheduledRefreshActive()).toBe(true);
     });
 
     it('should return false after stopping', () => {
-      scheduleNightlyRefresh();
+      scheduleHourlyRefresh();
       stopScheduledRefresh();
 
       expect(isScheduledRefreshActive()).toBe(false);
@@ -334,7 +298,7 @@ describe('Database Refresh Service', () => {
     });
 
     it('should stop scheduled task', () => {
-      scheduleNightlyRefresh();
+      scheduleHourlyRefresh();
       resetRefreshState();
 
       expect(mockScheduledTask.stop).toHaveBeenCalled();
@@ -350,7 +314,7 @@ describe('Database Refresh Service', () => {
     });
 
     it('should mark refresh as inactive', () => {
-      scheduleNightlyRefresh();
+      scheduleHourlyRefresh();
       resetRefreshState();
 
       expect(isScheduledRefreshActive()).toBe(false);

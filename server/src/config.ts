@@ -11,8 +11,6 @@ export interface Config {
   dbPath: string;
   /** Server port */
   port: number;
-  /** Hour (0-23) for nightly database refresh */
-  nightlyRefreshHour: number;
   /** Node environment (development, production, test) */
   nodeEnv: string;
   /** Whether the app is running in production */
@@ -37,7 +35,6 @@ export interface Config {
 const defaults = {
   dbPath: '/data/My WinCatalog File.w3cat',
   port: 3000,
-  nightlyRefreshHour: 0,
   nodeEnv: 'development',
   staticPath: './public',
 };
@@ -57,20 +54,6 @@ function parseIntEnv(value: string | undefined, defaultValue: number): number {
     return defaultValue;
   }
   return parsed;
-}
-
-/**
- * Parse and validate nightly refresh hour (0-23)
- */
-function parseRefreshHour(value: string | undefined): number {
-  const hour = parseIntEnv(value, defaults.nightlyRefreshHour);
-  if (hour < 0 || hour > 23) {
-    console.warn(
-      `Invalid refresh hour ${hour}, must be 0-23. Using default: ${defaults.nightlyRefreshHour}`
-    );
-    return defaults.nightlyRefreshHour;
-  }
-  return hour;
 }
 
 /**
@@ -131,7 +114,6 @@ export function loadConfig(): Config {
   return {
     dbPath: process.env.DB_PATH || defaults.dbPath,
     port: parseIntEnv(process.env.PORT, defaults.port),
-    nightlyRefreshHour: parseRefreshHour(process.env.NIGHTLY_REFRESH_HOUR),
     nodeEnv,
     isProduction: nodeEnv === 'production',
     isDevelopment: nodeEnv === 'development',

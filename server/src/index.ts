@@ -6,7 +6,7 @@ import cors from 'cors';
 import apiRoutes from './routes/index.js';
 import { getConfig, validateConfig } from './config.js';
 import { initDatabase } from './db/database.js';
-import { scheduleNightlyRefresh, startWatching } from './services/refresh.js';
+import { scheduleHourlyRefresh, startWatching } from './services/refresh.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { createStaticMiddleware } from './middleware/static.js';
 
@@ -36,7 +36,7 @@ app.use(errorHandler);
  * Initialize the application
  * - Validates configuration
  * - Connects to database
- * - Schedules nightly refresh
+ * - Schedules hourly refresh
  */
 async function initialize(): Promise<void> {
   // Validate configuration
@@ -54,8 +54,8 @@ async function initialize(): Promise<void> {
   // Watch database file for changes (proactive reload)
   startWatching(config.dbPath);
 
-  // Schedule nightly refresh
-  scheduleNightlyRefresh(config.nightlyRefreshHour);
+  // Schedule hourly refresh check (safety net for missed fs.watch events)
+  scheduleHourlyRefresh();
 }
 
 // Start server only if not in test environment

@@ -15,12 +15,20 @@ import {
   scheduleNightlyRefresh,
   stopScheduledRefresh,
   isScheduledRefreshActive,
+  startWatching,
+  stopWatching,
+  isWatching,
   resetRefreshState,
 } from '../../../src/services/refresh.js';
 
 // Mock the database module
 vi.mock('../../../src/db/database.js', () => ({
   getDatabase: vi.fn(),
+}));
+
+// Mock fs.watch
+vi.mock('fs', () => ({
+  watch: vi.fn(),
 }));
 
 // Mock node-cron
@@ -30,6 +38,7 @@ vi.mock('node-cron', () => ({
   },
 }));
 
+import { watch } from 'fs';
 import { getDatabase } from '../../../src/db/database.js';
 
 describe('Database Refresh Service', () => {
@@ -379,6 +388,129 @@ describe('Database Refresh Service', () => {
       resetRefreshState();
 
       expect(isScheduledRefreshActive()).toBe(false);
+    });
+
+    it('should stop file watcher', () => {
+      const mockClose = vi.fn();
+      vi.mocked(watch).mockReturnValue({ close: mockClose } as any);
+
+      startWatching('/data/test.db');
+      resetRefreshState();
+
+      expect(mockClose).toHaveBeenCalled();
+      expect(isWatching()).toBe(false);
+    });
+  });
+
+  describe('startWatching', () => {
+    let mockClose: ReturnType<typeof vi.fn>;
+    let capturedListener: (() => void) | null;
+
+    beforeEach(() => {
+      mockClose = vi.fn();
+      capturedListener = null;
+      vi.mocked(watch).mockImplementation(
+        (_path: string, listener: any) => {
+          capturedListener = listener as () => void;
+          return { close: mockClose } as any;
+        }
+      );
+    });
+
+    it('should start watching the given file path', () => {
+      startWatching('/data/test.db');
+
+      expect(watch).toHaveBeenCalledWith('/data/test.db', expect.any(Function));
+      expect(isWatching()).toBe(true);
+    });
+
+    it('should close previous watcher when called again', () => {
+      startWatching('/data/test.db');
+      startWatching('/data/test2.db');
+
+      expect(mockClose).toHaveBeenCalled();
+    });
+
+    it('should debounce change events and call checkAndReloadIfChanged', async () => {
+      vi.useFakeTimers();
+      mockDbManager.reloadIfChanged.mockResolvedValue(true);
+
+      startWatching('/data/test.db');
+      capturedListener!();
+
+      // Should not have called reload yet (debounce)
+      expect(mockDbManager.reloadIfChanged).not.toHaveBeenCalled();
+
+      // Advance past debounce period
+      await vi.advanceTimersByTimeAsync(500);
+
+      expect(mockDbManager.reloadIfChanged).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('should reset debounce timer on rapid events', async () => {
+      vi.useFakeTimers();
+      mockDbManager.reloadIfChanged.mockResolvedValue(true);
+
+      startWatching('/data/test.db');
+      capturedListener!();
+      await vi.advanceTimersByTimeAsync(300);
+      capturedListener!(); // second event resets the timer
+      await vi.advanceTimersByTimeAsync(300);
+
+      // Still not called — second event reset the 500ms window
+      expect(mockDbManager.reloadIfChanged).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(200);
+      expect(mockDbManager.reloadIfChanged).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+
+    it('should handle reload errors gracefully', async () => {
+      vi.useFakeTimers();
+      const testError = new Error('Reload failed');
+      mockDbManager.reloadIfChanged.mockRejectedValue(testError);
+
+      startWatching('/data/test.db');
+      capturedListener!();
+
+      await vi.advanceTimersByTimeAsync(500);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error during file-watch reload:',
+        testError
+      );
+      vi.useRealTimers();
+    });
+  });
+
+  describe('stopWatching', () => {
+    it('should close the watcher', () => {
+      const mockClose = vi.fn();
+      vi.mocked(watch).mockReturnValue({ close: mockClose } as any);
+
+      startWatching('/data/test.db');
+      stopWatching();
+
+      expect(mockClose).toHaveBeenCalled();
+      expect(isWatching()).toBe(false);
+    });
+
+    it('should not throw when not watching', () => {
+      expect(() => stopWatching()).not.toThrow();
+    });
+  });
+
+  describe('isWatching', () => {
+    it('should return false when not watching', () => {
+      expect(isWatching()).toBe(false);
+    });
+
+    it('should return true when watching', () => {
+      vi.mocked(watch).mockReturnValue({ close: vi.fn() } as any);
+      startWatching('/data/test.db');
+
+      expect(isWatching()).toBe(true);
     });
   });
 });

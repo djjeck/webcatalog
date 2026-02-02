@@ -6,7 +6,7 @@ import cors from 'cors';
 import apiRoutes from './routes/index.js';
 import { getConfig, validateConfig } from './config.js';
 import { initDatabase } from './db/database.js';
-import { scheduleNightlyRefresh } from './services/refresh.js';
+import { scheduleNightlyRefresh, startWatching } from './services/refresh.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { createStaticMiddleware } from './middleware/static.js';
 
@@ -50,6 +50,9 @@ async function initialize(): Promise<void> {
   console.log(`Initializing database from: ${config.dbPath}`);
   await initDatabase(config.dbPath, config.excludePatterns, config.minFileSize);
   console.log('Database initialized successfully');
+
+  // Watch database file for changes (proactive reload)
+  startWatching(config.dbPath);
 
   // Schedule nightly refresh
   scheduleNightlyRefresh(config.nightlyRefreshHour);

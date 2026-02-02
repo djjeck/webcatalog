@@ -3,8 +3,15 @@
  * Handles on-demand refresh and scheduled nightly refresh
  */
 
+import { watch, type FSWatcher } from 'fs';
 import cron from 'node-cron';
 import { getDatabase } from '../db/database.js';
+
+/**
+ * File system watcher for proactive reload
+ */
+let fileWatcher: FSWatcher | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Scheduled task reference for cleanup
@@ -97,9 +104,58 @@ export function isScheduledRefreshActive(): boolean {
 }
 
 /**
+ * Start watching the database file for changes.
+ * When a change is detected, proactively reload the database so that
+ * subsequent searches don't block waiting for a rebuild.
+ */
+export function startWatching(dbPath: string): void {
+  // Clear the previous watcher, if present.
+  stopWatching();
+
+  fileWatcher = watch(dbPath, () => {
+    // Debounce: wait 500ms after the last change event before reloading,
+    // since file writes may trigger multiple rapid events.
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+    debounceTimer = setTimeout(() => {
+      debounceTimer = null;
+      console.log('File change detected, reloading database...');
+      checkAndReloadIfChanged().catch((error) => {
+        console.error('Error during file-watch reload:', error);
+      });
+    }, 500);
+  });
+
+  console.log(`Watching database file for changes: ${dbPath}`);
+}
+
+/**
+ * Stop watching the database file
+ */
+export function stopWatching(): void {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  if (fileWatcher) {
+    fileWatcher.close();
+    fileWatcher = null;
+  }
+}
+
+/**
+ * Check if file watching is active
+ */
+export function isWatching(): boolean {
+  return fileWatcher !== null;
+}
+
+/**
  * Reset internal state (useful for testing)
  */
 export function resetRefreshState(): void {
   stopScheduledRefresh();
+  stopWatching();
   lastReloadTime = null;
 }

@@ -41,7 +41,7 @@ export function createStaticMiddleware(staticPath: string): Router {
   // SPA fallback: serve index.html for all non-file requests
   // This allows client-side routing to work
   if (hasIndex) {
-    router.get('*', (_req: Request, res: Response) => {
+    router.use((_req: Request, res: Response) => {
       res.sendFile(indexPath);
     });
   }

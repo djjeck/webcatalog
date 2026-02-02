@@ -40,16 +40,6 @@ export async function checkAndReloadIfChanged(): Promise<boolean> {
 }
 
 /**
- * Force reload the database
- */
-export async function forceReload(): Promise<void> {
-  const dbManager = getDatabase();
-  await dbManager.reload();
-  lastReloadTime = new Date();
-  console.log(`Database force reloaded at ${lastReloadTime.toISOString()}`);
-}
-
-/**
  * Get the last reload timestamp
  */
 export function getLastReloadTime(): Date | null {
@@ -74,7 +64,7 @@ export function scheduleNightlyRefresh(hour: number = 0): void {
   scheduledTask = cron.schedule(cronExpression, async () => {
     console.log(`Running scheduled nightly refresh at hour ${validHour}`);
     try {
-      await forceReload();
+      await checkAndReloadIfChanged();
     } catch (error) {
       console.error('Error during scheduled refresh:', error);
     }

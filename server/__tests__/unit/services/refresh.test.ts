@@ -10,7 +10,6 @@ import {
 import cron from 'node-cron';
 import {
   checkAndReloadIfChanged,
-  forceReload,
   getLastReloadTime,
   scheduleNightlyRefresh,
   stopScheduledRefresh,
@@ -121,48 +120,15 @@ describe('Database Refresh Service', () => {
     });
   });
 
-  describe('forceReload', () => {
-    it('should call database reload', async () => {
-      mockDbManager.reload.mockResolvedValue(undefined);
-
-      await forceReload();
-
-      expect(mockDbManager.reload).toHaveBeenCalled();
-    });
-
-    it('should update lastReloadTime', async () => {
-      mockDbManager.reload.mockResolvedValue(undefined);
-
-      const before = new Date();
-      await forceReload();
-      const after = new Date();
-
-      const lastReload = getLastReloadTime();
-      expect(lastReload).not.toBeNull();
-      expect(lastReload!.getTime()).toBeGreaterThanOrEqual(before.getTime());
-      expect(lastReload!.getTime()).toBeLessThanOrEqual(after.getTime());
-    });
-
-    it('should log force reload message', async () => {
-      mockDbManager.reload.mockResolvedValue(undefined);
-
-      await forceReload();
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Database force reloaded at')
-      );
-    });
-  });
-
   describe('getLastReloadTime', () => {
     it('should return null when no reload has occurred', () => {
       expect(getLastReloadTime()).toBeNull();
     });
 
     it('should return the last reload time after reload', async () => {
-      mockDbManager.reload.mockResolvedValue(undefined);
+      mockDbManager.reloadIfChanged.mockResolvedValue(true);
 
-      await forceReload();
+      await checkAndReloadIfChanged();
 
       expect(getLastReloadTime()).toBeInstanceOf(Date);
     });
@@ -247,8 +213,8 @@ describe('Database Refresh Service', () => {
     });
 
     describe('scheduled callback', () => {
-      it('should call forceReload when triggered', async () => {
-        mockDbManager.reload.mockResolvedValue(undefined);
+      it('should call checkAndReloadIfChanged when triggered', async () => {
+        mockDbManager.reloadIfChanged.mockResolvedValue(false);
         let capturedCallback: () => Promise<void>;
 
         vi.mocked(cron.schedule).mockImplementation(
@@ -261,12 +227,12 @@ describe('Database Refresh Service', () => {
         scheduleNightlyRefresh(0);
         await capturedCallback!();
 
-        expect(mockDbManager.reload).toHaveBeenCalled();
+        expect(mockDbManager.reloadIfChanged).toHaveBeenCalled();
       });
 
       it('should handle errors during scheduled refresh', async () => {
         const testError = new Error('Reload failed');
-        mockDbManager.reload.mockRejectedValue(testError);
+        mockDbManager.reloadIfChanged.mockRejectedValue(testError);
         let capturedCallback: () => Promise<void>;
 
         vi.mocked(cron.schedule).mockImplementation(
@@ -375,8 +341,8 @@ describe('Database Refresh Service', () => {
     });
 
     it('should reset lastReloadTime to null', async () => {
-      mockDbManager.reload.mockResolvedValue(undefined);
-      await forceReload();
+      mockDbManager.reloadIfChanged.mockResolvedValue(true);
+      await checkAndReloadIfChanged();
 
       resetRefreshState();
 

@@ -11,6 +11,7 @@ describe('StatusBar', () => {
     fileSize: 1073741824, // 1 GB
     lastModified: '2024-06-15T10:30:00Z',
     lastLoaded: new Date().toISOString(), // Just now
+    lastLoadDurationMs: 3200,
     statistics: {
       totalItems: 15000,
       totalFiles: 12000,

@@ -24,6 +24,7 @@ class DatabaseManager {
   private sourceDbPath: string;
   private lastModified: number = 0;
   private lastSize: number = 0;
+  private lastLoadDurationMs: number = 0;
   private readonly excludePatterns: string[];
   private readonly minFileSize: number;
 
@@ -37,6 +38,8 @@ class DatabaseManager {
    * Initialize database connection and build search index
    */
   async init(): Promise<void> {
+    const startTime = performance.now();
+
     const stats = await stat(this.sourceDbPath);
     this.lastModified = stats.mtimeMs;
     this.lastSize = stats.size;
@@ -51,6 +54,8 @@ class DatabaseManager {
     this.createSearchIndex(sourceDb);
 
     sourceDb.close();
+
+    this.lastLoadDurationMs = Math.round(performance.now() - startTime);
   }
 
   /**
@@ -446,6 +451,13 @@ class DatabaseManager {
    */
   getLastSize(): number {
     return this.lastSize;
+  }
+
+  /**
+   * Get the duration of the last database load in milliseconds
+   */
+  getLastLoadDurationMs(): number {
+    return this.lastLoadDurationMs;
   }
 }
 

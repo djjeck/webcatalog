@@ -36,6 +36,7 @@ describe('App', () => {
     fileSize: 1073741824,
     lastModified: '2024-06-15T10:30:00Z',
     lastLoaded: new Date().toISOString(),
+    lastLoadDurationMs: 2500,
     statistics: {
       totalItems: 15000,
       totalFiles: 12000,

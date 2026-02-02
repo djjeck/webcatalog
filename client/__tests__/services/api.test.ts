@@ -208,6 +208,7 @@ describe('API Client', () => {
         fileSize: 1048576,
         lastModified: '2024-01-15T10:00:00.000Z',
         lastLoaded: '2024-01-15T12:00:00.000Z',
+        lastLoadDurationMs: 1234,
         statistics: {
           totalItems: 1000,
           totalFiles: 800,

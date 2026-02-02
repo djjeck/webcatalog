@@ -30,6 +30,7 @@ describe('GET /api/db-status', () => {
     getDb: ReturnType<typeof vi.fn>;
     getPath: ReturnType<typeof vi.fn>;
     getLastModified: ReturnType<typeof vi.fn>;
+    getLastLoadDurationMs: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -64,6 +65,7 @@ describe('GET /api/db-status', () => {
       getDb: vi.fn().mockReturnValue(mockDb),
       getPath: vi.fn().mockReturnValue('/data/catalog.w3cat'),
       getLastModified: vi.fn().mockReturnValue(1704067200000), // 2024-01-01
+      getLastLoadDurationMs: vi.fn().mockReturnValue(2500),
     };
 
     vi.mocked(getDatabase).mockReturnValue(mockDbManager as any);
@@ -83,6 +85,7 @@ describe('GET /api/db-status', () => {
     expect(response.body).toHaveProperty('fileSize', 52428800);
     expect(response.body).toHaveProperty('lastModified');
     expect(response.body).toHaveProperty('lastLoaded');
+    expect(response.body).toHaveProperty('lastLoadDurationMs', 2500);
     expect(response.body).toHaveProperty('statistics');
   });
 

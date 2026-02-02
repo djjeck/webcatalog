@@ -36,7 +36,8 @@ export function StatusBar({ dbStatus, isLoading, error }: StatusBarProps) {
     );
   }
 
-  const { connected, statistics, lastLoaded, fileSize } = dbStatus;
+  const { connected, statistics, lastLoaded, lastLoadDurationMs, fileSize } =
+    dbStatus;
 
   return (
     <div
@@ -65,6 +66,9 @@ export function StatusBar({ dbStatus, isLoading, error }: StatusBarProps) {
           </span>
           <span className="status-item status-updated">
             Updated: {formatLastUpdated(lastLoaded)}
+          </span>
+          <span className="status-item status-load-time">
+            Load: {(lastLoadDurationMs / 1000).toFixed(1)}s
           </span>
         </>
       )}

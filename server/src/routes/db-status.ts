@@ -66,6 +66,7 @@ router.get(
       lastLoaded: lastReloadTime
         ? lastReloadTime.toISOString()
         : new Date(dbManager.getLastModified()).toISOString(),
+      lastLoadDurationMs: dbManager.getLastLoadDurationMs(),
       statistics: {
         totalItems: itemsCount.count,
         totalFiles: filesCount.count,

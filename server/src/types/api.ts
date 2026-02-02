@@ -47,6 +47,7 @@ export interface DbStatusResponse {
   fileSize: number; // in bytes
   lastModified: string;
   lastLoaded: string;
+  lastLoadDurationMs: number; // time to reload and rebuild in-memory DB
   statistics: {
     totalItems: number;
     totalFiles: number;

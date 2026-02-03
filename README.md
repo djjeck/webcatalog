@@ -368,6 +368,14 @@ See [PLAN.md](PLAN.md) for the complete roadmap. Potential features:
 - Search history
 - Virtual drive status indicators
 
+## Staging Deployment
+
+You can build and deploy a dev image to a server on your local network for testing before releasing:
+
+```bash
+npm run docker:dev
+```
+
 ## Releasing
 
 To publish a new version to Docker Hub:

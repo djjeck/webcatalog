@@ -417,6 +417,10 @@ For issues or questions:
 2. Review the [Implementation Plan](PLAN.md)
 3. Open an issue on GitHub
 
+## Disclaimer
+
+This project is not affiliated with, endorsed by, or associated with [WinCatalog](https://www.wincatalog.com/) or its developers. WinCatalog is a product of its respective owners. This is an independent, community project that reads WinCatalog database files for personal use.
+
 ---
 
 Made with ❤️ for WinCatalog users who want web access to their catalogs.

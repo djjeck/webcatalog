@@ -124,13 +124,18 @@ export async function executeSearch(
   // Build search query
   const { sql, params } = buildSearchQuery(query);
 
-  // Add LIMIT and OFFSET to query
-  const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
+  // Use COUNT(*) OVER() window function to get total count in a single query
+  const paginatedSql = `SELECT *, COUNT(*) OVER() AS total_count FROM (${sql}) LIMIT ? OFFSET ?`;
   const paginatedParams = [...params, effectiveLimit, effectiveOffset];
 
   // Execute query
   const stmt = db.prepare(paginatedSql);
-  const rows = stmt.all(...paginatedParams) as RawSearchRow[];
+  const rows = stmt.all(...paginatedParams) as (RawSearchRow & {
+    total_count: number;
+  })[];
+
+  // Extract total count from first row (0 if no results)
+  const totalResults = rows.length > 0 ? rows[0].total_count : 0;
 
   // Map results to API format
   const results = rows.map(mapRowToSearchResult);
@@ -141,7 +146,7 @@ export async function executeSearch(
   return {
     query,
     results,
-    totalResults: results.length,
+    totalResults,
     executionTime,
   };
 }

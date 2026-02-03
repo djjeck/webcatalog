@@ -263,6 +263,7 @@ describe('executeSearch', () => {
         id_parent: null,
         volume_name: null,
         full_path: null,
+        total_count: 1,
       },
     ];
 
@@ -291,7 +292,7 @@ describe('executeSearch', () => {
     await executeSearch('test');
 
     expect(mockDb.prepare).toHaveBeenCalledWith(
-      expect.stringContaining('LIMIT ? OFFSET ?')
+      expect.stringContaining('COUNT(*) OVER()')
     );
     // Default limit is 100, offset is 0
     expect(mockStatement.all).toHaveBeenCalledWith('%test%', 100, 0);
@@ -352,6 +353,7 @@ describe('executeSearch', () => {
         id_parent: null,
         volume_name: null,
         full_path: null,
+        total_count: 2,
       },
       {
         id: 2,
@@ -364,6 +366,7 @@ describe('executeSearch', () => {
         id_parent: null,
         volume_name: null,
         full_path: null,
+        total_count: 2,
       },
     ];
 

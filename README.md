@@ -20,14 +20,6 @@ WinCatalog is a Windows utility that scans external drives and offers a search b
 - 📦 **Read-only access** to WinCatalog databases
 - 💾 **No modification** of original WinCatalog files
 
-## Technology Stack
-
-- **Frontend**: React + TypeScript (Vite)
-- **Backend**: Node.js + Express + TypeScript
-- **Database**: SQLite (via better-sqlite3)
-- **Testing**: Vitest (100% coverage)
-- **Containerization**: Docker
-
 ## Quick Start
 
 ### Using Docker Compose (Recommended)
@@ -87,56 +79,6 @@ docker run -d \
   djjeck/webcatalog:latest
 ```
 
-### Local Development
-
-1. **Prerequisites**
-   - Node.js 20+
-   - npm
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment**
-   ```bash
-   cp server/.env.example server/.env
-   # Edit server/.env to point to your WinCatalog database
-   ```
-
-4. **Run development servers**
-   ```bash
-   npm run dev
-   ```
-
-   This starts both frontend (Vite) and backend (Express) in development mode.
-
-5. **Run tests**
-   ```bash
-   npm run test:coverage
-   ```
-
-## Project Structure
-
-```
-webcatalog/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── services/      # API client
-│   │   └── types/         # TypeScript types
-│   └── __tests__/         # Frontend tests
-├── server/                 # Node.js backend
-│   ├── src/
-│   │   ├── db/           # Database access layer
-│   │   ├── routes/       # API routes
-│   │   ├── services/     # Business logic
-│   │   └── scripts/      # Utility scripts
-│   └── __tests__/         # Backend tests
-├── docs/                   # Documentation
-└── Dockerfile              # Docker image build
-```
-
 ## Search Syntax
 
 - **Single term**: `vacation` - Finds files/folders containing "vacation"
@@ -146,208 +88,16 @@ webcatalog/
 
 All searches are case-insensitive and match partial words.
 
-## API Endpoints
-
-- `GET /api/health` - Health check
-- `GET /api/search?q=<query>` - Search catalog
-- `GET /api/db-status` - Database status and statistics
-
-## Environment Variables
+## Configuration
 
 | Variable           | Description                             | Default                          |
 | ------------------ | --------------------------------------- | -------------------------------- |
 | `DB_PATH`          | Path to WinCatalog `.w3cat` file        | `/data/My WinCatalog File.w3cat` |
-| `EXCLUDE_PATTERNS` | Comma-separated patterns to exclude     | (none)                           |
+| `EXCLUDE_PATTERNS` | Comma-separated glob patterns to exclude | (none)                          |
 | `PORT`             | Server port                             | `3000`                           |
-| `NODE_ENV`         | Environment (development/production)    | `production`                     |
 | `MIN_FILE_SIZE`    | Minimum file size to include in results | (none)                           |
-| `STATIC_PATH`      | Path to static files directory (the UI) | `./public`                       |
 
-### Exclude Patterns
-
-The `EXCLUDE_PATTERNS` environment variable allows you to filter out files and directories from search results based on filename patterns. This is useful for excluding system files, temporary files, or NAS-specific metadata.
-
-**Pattern Syntax:**
-- `*` matches any characters (like a glob wildcard)
-- Patterns are matched against filenames only (not full paths)
-- Multiple patterns are separated by commas
-
-**Examples:**
-```bash
-# Exclude common system/temp files
-EXCLUDE_PATTERNS="*.tmp,Thumbs.db,.DS_Store"
-
-# Exclude Synology NAS metadata
-EXCLUDE_PATTERNS="@eaDir/*,#recycle/*"
-```
-
-### Minimum File Size
-
-The `MIN_FILE_SIZE` environment variable excludes files and folders smaller than a given size from search results. This is useful for filtering out small system files or metadata files. Folder sizes are computed from all descendant files (including those below the threshold), then folders whose total size is still below the threshold are also excluded.
-
-**Format:** A number followed by a unit: `b`, `kb`, `mb`, or `gb` (case insensitive).
-
-**Examples:**
-```bash
-# Exclude files smaller than 100 KB
-MIN_FILE_SIZE="100kb"
-
-# Exclude files smaller than 5 MB
-MIN_FILE_SIZE="5MB"
-```
-
-## Database Schema
-
-The WinCatalog database schema has been reverse-engineered and documented. See [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) for details.
-
-**Key tables**:
-- `w3_items` - Main catalog items
-- `w3_fileInfo` - File metadata (names, sizes, dates)
-- `w3_decent` - Tree structure (parent-child relationships)
-- `w3_volumeInfo` - Drive/volume information
-
-## Development
-
-### Available Scripts
-
-**Root level** (runs on both client and server):
-- `npm run dev` - Start development servers
-- `npm run build` - Build for production
-- `npm run test` - Run all tests
-- `npm run test:coverage` - Run tests with coverage reports
-- `npm run lint` - Lint all code
-- `npm run typecheck` - TypeScript type checking
-- `npm run format` - Format code with Prettier
-
-**Client specific**:
-```bash
-cd client
-npm run dev          # Vite dev server
-npm run build        # Production build
-npm run preview      # Preview production build
-```
-
-**Server specific**:
-```bash
-cd server
-npm run dev          # Development server with auto-reload
-npm start            # Production server
-```
-
-### Testing
-
-This project aims for 100% test coverage. Tests are written using Vitest.
-
-```bash
-npm run test:coverage     # Run all tests with coverage
-npm run test:watch        # Watch mode for development
-```
-
-Current coverage: **100%** on both frontend and backend.
-
-### Code Quality
-
-The project uses:
-- **ESLint** for linting
-- **Prettier** for code formatting
-- **TypeScript** for type safety
-- **Vitest** for testing
-
-All checks run automatically and must pass before committing.
-
-## Deployment
-
-### Building the Docker Image
-
-```bash
-# Build for the current platform
-docker build -t webcatalog .
-
-# Build for multiple architectures (AMD64 + ARM64)
-docker buildx build --platform linux/amd64,linux/arm64 -t webcatalog .
-
-# Build and push multi-arch image to a registry
-docker buildx build --platform linux/amd64,linux/arm64 -t your-registry/webcatalog:latest --push .
-```
-
-> **Note:** Multi-arch builds require Docker Buildx (included with Docker Desktop).
-> The published Docker Hub image (`djjeck/webcatalog`) supports both AMD64 (Intel/AMD)
-> and ARM64 (Apple Silicon, Synology NAS) architectures.
-
-### Managing the Container
-
-```bash
-# View logs
-docker compose logs -f
-
-# Stop the service
-docker compose down
-
-# Restart the service
-docker compose restart
-```
-
-### Synology NAS
-
-#### Installing the Image
-
-1. Open **Container Manager** (formerly Docker) on your Synology NAS
-2. Go to **Registry**, search for `djjeck/webcatalog`, and download the `latest` tag
-   - The image supports both AMD64 and ARM64, so it works on Intel and ARM-based Synology models
-
-#### Creating the Container
-
-1. Go to **Image**, select `djjeck/webcatalog`, and click **Run**
-2. **General Settings**:
-   - Give the container a name (e.g., `webcatalog`)
-   - Enable **auto-restart** if desired
-3. **Port Settings**:
-   - Map a local port (e.g., `3000`) to container port `3000`
-4. **Volume Settings**:
-   - Click **Add File** and select your `.w3cat` database file
-   - Set the mount path to `/data/My WinCatalog File.w3cat`
-   - Enable **Read-Only**
-5. **Environment Variables** (optional):
-   - `EXCLUDE_PATTERNS` — filter out NAS metadata, e.g., `@eaDir/*,#recycle/*,Thumbs.db,.DS_Store`
-   - `MIN_FILE_SIZE` — exclude small files, e.g., `100kb`
-6. Click **Done** to create and start the container
-
-#### Accessing the Interface
-
-Open `http://your-nas-ip:3000` in a browser on any device on your network.
-
-#### Updating the Database
-
-When you re-scan drives in WinCatalog and copy the updated `.w3cat` file to your NAS, WebCatalog will detect the change to the savefile automatically. No container restart is needed.
-
-## Troubleshooting
-
-- **Container won't start**: Check that the volume mount path matches exactly `/data/My WinCatalog File.w3cat`
-- **No search results**: Verify the `.w3cat` file is a valid WinCatalog database and not empty
-- **Permission errors**: Ensure the database file is readable. The container runs as a non-root user
-- **Database not updating**: The app detects file changes on savefile change, on each search, or at the hourly refresh. If you replaced the file, try searching again or wait for the next refresh cycle. Restarting the container will also force a refresh
-- **Port conflict**: Change the host port in `docker-compose.yml` (e.g., `8080:3000`) if port 3000 is already in use
-
-## Architecture
-
-### Backend
-
-- **Express.js** server with TypeScript
-- **better-sqlite3** for fast, synchronous SQLite access
-- **Read-only** database access for safety
-- **Auto-reload** on database file changes
-- **Hourly DB refresh** for reliability
-
-### Frontend
-
-- **React** with TypeScript
-- **Vite** for fast builds and HMR
-- **Responsive design** for mobile and desktop
-- **Client-side search state** management
-
-### Database Access
-
-The application monitors the WinCatalog database file and automatically reloads when changes are detected. This allows you to continue using WinCatalog normally while the web interface stays in sync.
+See [Development Guide](docs/DEVELOPMENT.md#environment-variables) for full configuration details.
 
 ## Limitations
 
@@ -368,46 +118,11 @@ See [PLAN.md](PLAN.md) for the complete roadmap. Potential features:
 - Search history
 - Virtual drive status indicators
 
-## Staging Deployment
+## Documentation
 
-You can build and deploy a dev image to a server on your local network for testing before releasing:
-
-```bash
-npm run docker:dev
-```
-
-## Releasing
-
-To publish a new version to Docker Hub:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-The [publish workflow](.github/workflows/publish.yml) will automatically build multi-arch images (AMD64 + ARM64) and push them to Docker Hub tagged with the version number and `latest`. You can also trigger a manual build from the Actions tab using `workflow_dispatch`.
-
-**Required GitHub secrets**: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
-
-## Contributing
-
-This project follows a structured development workflow. See [CLAUDE.md](CLAUDE.md) for development guidelines.
-
-1. All changes follow [PLAN.md](PLAN.md)
-2. Tests are required (100% coverage goal)
-3. Code must pass linting, type checking, and formatting
-4. Each change should be self-contained and reviewable
-
-## License
-
-ISC License - See [LICENSE](LICENSE) for details.
-
-## Links
-
-- [WinCatalog Official Site](https://www.wincatalog.com/)
-- [Database Schema Documentation](docs/DATABASE_SCHEMA.md)
-- [Implementation Plan](PLAN.md)
-- [Development Workflow](CLAUDE.md)
+- [Development Guide](docs/DEVELOPMENT.md) — local setup, scripts, architecture, releasing
+- [Deployment Guide](docs/DEPLOYMENT.md) — Docker builds, Synology NAS, troubleshooting
+- [Database Schema](docs/DATABASE_SCHEMA.md) — reverse-engineered WinCatalog schema
 
 ## Credits
 
@@ -418,12 +133,9 @@ This project was implemented with assistance from **Claude** (Anthropic's AI ass
 - Test suite development
 - Documentation
 
-## Support
+## License
 
-For issues or questions:
-1. Check the [Database Schema](docs/DATABASE_SCHEMA.md) documentation
-2. Review the [Implementation Plan](PLAN.md)
-3. Open an issue on GitHub
+ISC License - See [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 

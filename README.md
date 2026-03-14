@@ -6,19 +6,19 @@ A web-based UI for searching [WinCatalog](https://www.wincatalog.com/) databases
 
 ## Overview
 
-WinCatalog is a Windows utility that scans external drives and offers a search bar to locate content within these drives. It stores catalog data in SQLite databases with a proprietary schema (`.w3cat` files).
+WebCatalog is a web-based, mobile-friendly search interface for <a href="https://www.wincatalog.com/" target="_blank">WinCatalog 2024</a> catalogs.
 
-**WebCatalog** provides a simple, web-based interface to search these catalogs without needing the full Windows application. The application is dockerized for easy deployment on any platform, including Synology NAS devices.
+Load a .w3cat file and WebCatalog will let you search its contents to determine which volume contains a specific file or folder, along with its size and latest modification date.
+
+![Screenshot example](docs/search.jpg)
 
 ## Features
 
-- 🔍 **Text-based search** across file names and paths
-- 🌐 **Web interface** accessible from any device
-- 🐳 **Docker deployment** for easy installation
-- ⚡ **Fast search** with support for multiple search terms
-- 🔄 **Auto-reload** when database file changes
-- 📦 **Read-only access** to WinCatalog databases
-- 💾 **No modification** of original WinCatalog files
+- **Web interface** A basic, lightweight text-based search interface that works on any browser, including mobile devices
+- **Read-only operation** WebCatalog never modifies your existing .w3cat file
+- **Auto-refresh** Automatically detects when the .w3cat file is modified and reloads its contents
+- **Pattern and size filtering** Exclude specific patterns or file types and set a minimum file size to filter results
+- **"I feel lucky" search** Click the slot-machine icon to perform a random search query
 
 ## Quick Start
 
@@ -90,12 +90,12 @@ All searches are case-insensitive and match partial words.
 
 ## Configuration
 
-| Variable           | Description                             | Default                          |
-| ------------------ | --------------------------------------- | -------------------------------- |
-| `DB_PATH`          | Path to WinCatalog `.w3cat` file        | `/data/My WinCatalog File.w3cat` |
-| `EXCLUDE_PATTERNS` | Comma-separated glob patterns to exclude | (none)                          |
-| `PORT`             | Server port                             | `3000`                           |
-| `MIN_FILE_SIZE`    | Minimum file size to include in results | (none)                           |
+| Variable           | Description                              | Default                          |
+| ------------------ | ---------------------------------------- | -------------------------------- |
+| `DB_PATH`          | Path to WinCatalog `.w3cat` file         | `/data/My WinCatalog File.w3cat` |
+| `EXCLUDE_PATTERNS` | Comma-separated glob patterns to exclude | (none)                           |
+| `PORT`             | Server port                              | `3000`                           |
+| `MIN_FILE_SIZE`    | Minimum file size to include in results  | (none)                           |
 
 See [Development Guide](docs/DEVELOPMENT.md#environment-variables) for full configuration details.
 

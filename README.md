@@ -135,7 +135,7 @@ This project was implemented with assistance from **Claude** (Anthropic's AI ass
 
 ## License
 
-ISC License - See [LICENSE](LICENSE) for details.
+GNU GPL v3.0 License - See [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 

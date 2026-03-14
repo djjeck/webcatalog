@@ -23,7 +23,7 @@
     "sqlite"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0-only",
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",

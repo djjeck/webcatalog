@@ -27,7 +27,7 @@
     "web"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0-only",
   "devDependencies": {
     "@playwright/test": "^1.58.1",
     "concurrently": "^9.1.2"

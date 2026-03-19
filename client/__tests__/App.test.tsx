@@ -3,6 +3,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../src/App';
 import * as api from '../src/services/api';
+import {
+  flushDebounce,
+  setupDebouncedUser,
+} from './utils/debounce';
 import type {
   SearchResponse,
   SearchResultItem,
@@ -104,7 +108,7 @@ describe('App', () => {
       // Make search hang to capture loading state
       mockSearch.mockImplementation(() => new Promise(() => {}));
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       // Wait for db status to load first
@@ -114,6 +118,7 @@ describe('App', () => {
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
+      await flushDebounce();
 
       // Wait for debounce and check for loading indicator
       await waitFor(() => {
@@ -124,11 +129,12 @@ describe('App', () => {
     it('should call search API and display results', async () => {
       mockSearch.mockResolvedValue(mockSearchResponse);
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation photos');
+      await flushDebounce();
 
       // Wait for debounce and API call
       await waitFor(() => {
@@ -149,11 +155,12 @@ describe('App', () => {
         executionTime: 10,
       });
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'nonexistent');
+      await flushDebounce();
 
       await waitFor(() => {
         expect(screen.getByText('No Results Found')).toBeInTheDocument();
@@ -163,11 +170,12 @@ describe('App', () => {
     it('should clear results when input is emptied', async () => {
       mockSearch.mockResolvedValue(mockSearchResponse);
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
+      await flushDebounce();
 
       await waitFor(() => {
         expect(screen.getByText('2 results found')).toBeInTheDocument();
@@ -189,11 +197,12 @@ describe('App', () => {
         new api.ApiError(500, 'Internal Error', 'Database connection failed')
       );
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
+      await flushDebounce();
 
       await waitFor(() => {
         expect(screen.getByText('Something Went Wrong')).toBeInTheDocument();
@@ -207,11 +216,12 @@ describe('App', () => {
     it('should show generic error message for non-API errors', async () => {
       mockSearch.mockRejectedValue(new Error('Network error'));
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
+      await flushDebounce();
 
       await waitFor(() => {
         expect(screen.getByText('Something Went Wrong')).toBeInTheDocument();
@@ -243,7 +253,7 @@ describe('App', () => {
     it('should transition from initial to results state', async () => {
       mockSearch.mockResolvedValue(mockSearchResponse);
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       // Initial state
@@ -251,6 +261,7 @@ describe('App', () => {
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
+      await flushDebounce();
 
       // Results state replaces initial state
       await waitFor(() => {
@@ -272,12 +283,13 @@ describe('App', () => {
           executionTime: 20,
         });
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       // First search
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
+      await flushDebounce();
 
       await waitFor(() => {
         expect(screen.getByText('2 results found')).toBeInTheDocument();
@@ -286,6 +298,7 @@ describe('App', () => {
       // Second search
       await user.clear(input);
       await user.type(input, 'photos');
+      await flushDebounce();
 
       await waitFor(() => {
         expect(screen.getByText('1 result found')).toBeInTheDocument();
@@ -297,12 +310,13 @@ describe('App', () => {
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce(mockSearchResponse);
 
-      const user = userEvent.setup();
+      const user = setupDebouncedUser();
       render(<App />);
 
       // First search fails
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
+      await flushDebounce();
 
       await waitFor(() => {
         expect(screen.getByText('Something Went Wrong')).toBeInTheDocument();
@@ -311,6 +325,7 @@ describe('App', () => {
       // Second search succeeds
       await user.clear(input);
       await user.type(input, 'vacation');
+      await flushDebounce();
 
       await waitFor(() => {
         expect(screen.getByText('2 results found')).toBeInTheDocument();

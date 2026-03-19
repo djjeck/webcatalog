@@ -1,5 +1,5 @@
-import type { DbStatusResponse } from '../types/api';
-import { formatBytes, formatLastUpdated } from '../utils/format';
+import { type DbStatusResponse } from '~/types/api';
+import { formatBytes, formatLastUpdated } from '~/utils/format';
 
 export interface StatusBarProps {
   dbStatus: DbStatusResponse | null;

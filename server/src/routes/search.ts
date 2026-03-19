@@ -2,11 +2,10 @@
  * Search route
  */
 
-import { Router } from 'express';
-import type { Request, Response } from 'express';
-import { executeSearch } from '../services/search.js';
-import type { SearchResponse } from '../types/api.js';
+import { type Request, type Response, Router } from 'express';
 import { asyncHandler, BadRequestError } from '../middleware/errors.js';
+import { executeSearch } from '../services/search.js';
+import { type SearchResponse } from '../types/api.js';
 
 const router = Router();
 

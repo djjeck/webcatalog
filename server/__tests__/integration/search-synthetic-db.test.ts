@@ -117,6 +117,26 @@ function createTestDatabase(dbPath: string): void {
     INSERT INTO w3_fileInfo (id_item, name, date_change, date_create, size)
       VALUES (8, 'report.pdf', '2024-01-10 12:00:00', '2024-01-10 11:00:00', 512000);
     INSERT INTO w3_decent (id_item, id_parent) VALUES (8, 7);
+
+    INSERT INTO w3_items (id, itype, name) VALUES (9, 1, 'café-notes.txt');
+    INSERT INTO w3_fileInfo (id_item, name, date_change, date_create, size)
+      VALUES (9, 'café-notes.txt', '2024-01-12 09:00:00', '2024-01-12 08:30:00', 2048);
+    INSERT INTO w3_decent (id_item, id_parent) VALUES (9, 7);
+
+    INSERT INTO w3_items (id, itype, name) VALUES (10, 1, 'weiß-notes.txt');
+    INSERT INTO w3_fileInfo (id_item, name, date_change, date_create, size)
+      VALUES (10, 'weiß-notes.txt', '2024-01-13 09:00:00', '2024-01-13 08:30:00', 2048);
+    INSERT INTO w3_decent (id_item, id_parent) VALUES (10, 7);
+
+    INSERT INTO w3_items (id, itype, name) VALUES (11, 1, 'cafe-notes.txt');
+    INSERT INTO w3_fileInfo (id_item, name, date_change, date_create, size)
+      VALUES (11, 'cafe-notes.txt', '2024-01-14 09:00:00', '2024-01-14 08:30:00', 2048);
+    INSERT INTO w3_decent (id_item, id_parent) VALUES (11, 7);
+
+    INSERT INTO w3_items (id, itype, name) VALUES (12, 1, 'weiss-notes.txt');
+    INSERT INTO w3_fileInfo (id_item, name, date_change, date_create, size)
+      VALUES (12, 'weiss-notes.txt', '2024-01-15 09:00:00', '2024-01-15 08:30:00', 2048);
+    INSERT INTO w3_decent (id_item, id_parent) VALUES (12, 7);
   `);
 
   db.close();
@@ -256,6 +276,42 @@ describe('End-to-end search integration', () => {
       expect(response.status).toBe(200);
       // Should not throw - SQL injection prevented
       expect(response.body.results).toEqual([]);
+    });
+
+    it('should match accented query to accented and unaccented filenames', async () => {
+      const response = await request(app).get('/api/search?q=' + encodeURIComponent('café'));
+
+      expect(response.status).toBe(200);
+      const names = response.body.results.map((r: { name: string }) => r.name);
+      expect(names).toContain('café-notes.txt');
+      expect(names).toContain('cafe-notes.txt');
+    });
+
+    it('should match unaccented query to accented and unaccented filenames', async () => {
+      const response = await request(app).get('/api/search?q=cafe');
+
+      expect(response.status).toBe(200);
+      const names = response.body.results.map((r: { name: string }) => r.name);
+      expect(names).toContain('café-notes.txt');
+      expect(names).toContain('cafe-notes.txt');
+    });
+
+    it('should match sharp-s query to sharp-s and folded filenames', async () => {
+      const response = await request(app).get('/api/search?q=' + encodeURIComponent('weiß'));
+
+      expect(response.status).toBe(200);
+      const names = response.body.results.map((r: { name: string }) => r.name);
+      expect(names).toContain('weiß-notes.txt');
+      expect(names).toContain('weiss-notes.txt');
+    });
+
+    it('should match folded query to sharp-s and folded filenames', async () => {
+      const response = await request(app).get('/api/search?q=weiss');
+
+      expect(response.status).toBe(200);
+      const names = response.body.results.map((r: { name: string }) => r.name);
+      expect(names).toContain('weiß-notes.txt');
+      expect(names).toContain('weiss-notes.txt');
     });
   });
 

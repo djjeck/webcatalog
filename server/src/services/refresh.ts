@@ -3,7 +3,7 @@
  * Handles on-demand refresh, file watching, and scheduled hourly refresh
  */
 
-import { watch, type FSWatcher } from 'fs';
+import { type FSWatcher, watch } from 'fs';
 import cron from 'node-cron';
 import { getDatabase } from '../db/database.js';
 

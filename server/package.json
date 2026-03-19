@@ -23,7 +23,7 @@
     "sqlite"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0-only",
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",
@@ -32,6 +32,7 @@
     "node-cron": "^3.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@types/better-sqlite3": "^7.6.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.6",
@@ -41,6 +42,9 @@
     "@eslint/js": "^10.0.1",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.39.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.3.0",
     "prettier": "^3.8.1",
     "supertest": "^7.2.2",

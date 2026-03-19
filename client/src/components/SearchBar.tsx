@@ -1,10 +1,10 @@
 import {
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
   type ChangeEvent,
   type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from 'react';
 
 const DEBOUNCE_MS = 200;

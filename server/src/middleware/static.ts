@@ -3,9 +3,9 @@
  * Serves built React app and handles client-side routing
  */
 
-import path from 'path';
+import express, { type Request, type Response, type Router } from 'express';
 import { existsSync } from 'fs';
-import express, { type Router, type Request, type Response } from 'express';
+import path from 'path';
 
 /**
  * Create static file serving middleware

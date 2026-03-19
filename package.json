@@ -1,6 +1,6 @@
 {
   "name": "webcatalog",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "Web UI for WinCatalog database search",
   "private": true,
   "workspaces": [
@@ -18,7 +18,8 @@
     "format": "npm run format --workspaces",
     "format:check": "npm run format:check --workspaces",
     "test:e2e": "playwright test",
-    "docker:dev": "./scripts/deploy-dev.sh"
+    "docker:dev": "./scripts/deploy-dev.sh",
+    "validate": "npm run build && npm run test:coverage && npm run typecheck && npm run lint:fix && npm run lint && npm run format"
   },
   "keywords": [
     "wincatalog",
@@ -27,7 +28,7 @@
     "web"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0-only",
   "devDependencies": {
     "@playwright/test": "^1.58.1",
     "concurrently": "^9.1.2"

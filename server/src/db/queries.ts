@@ -2,8 +2,11 @@
  * Search query builder for WinCatalog database
  * Handles parsing search terms and building SQL queries
  *
- * Queries against the pre-computed search_index table for fast searches.
+ * Queries against a pre-computed search_index table.
+ * Search matching always runs against `name_folded`.
  */
+
+import { foldForSearch } from '../utils/search-fold.js';
 
 export interface SearchTerm {
   value: string;
@@ -79,7 +82,7 @@ export function globToLikePattern(pattern: string): string {
  * Build SQL WHERE clause for search terms
  * Returns clause and parameters for prepared statement
  *
- * Searches against the flattened search_index table (single column: name)
+ * Searches against the flattened search_index table (single column: name_folded)
  */
 export function buildSearchWhereClause(terms: SearchTerm[]): {
   clause: string;
@@ -93,10 +96,9 @@ export function buildSearchWhereClause(terms: SearchTerm[]): {
   const params: string[] = [];
 
   for (const term of terms) {
-    // Search only in the name column of the flattened search_index
-    conditions.push(`name LIKE ? ESCAPE '\\' COLLATE NOCASE`);
-    const pattern = buildLikePattern(term.value);
-    params.push(pattern);
+    // Search normalized names for accent-insensitive matching.
+    conditions.push(`name_folded LIKE ? ESCAPE '\\' COLLATE NOCASE`);
+    params.push(buildLikePattern(foldForSearch(term.value)));
   }
 
   // Combine all conditions with AND (all terms must match)
@@ -140,7 +142,7 @@ export function buildSearchQuery(searchString: string): {
   const terms = parseSearchQuery(searchString);
   const { clause, params } = buildSearchWhereClause(terms);
 
-  // Simple query against the flattened search_index table
+  // Query against precomputed table using normalized column filters.
   const sql = `
     SELECT
       id,

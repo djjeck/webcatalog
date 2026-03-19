@@ -1,4 +1,4 @@
-import type { SearchResultItem } from '../types/api';
+import { type SearchResultItem } from '~/types/api';
 import { ResultItem } from './ResultItem';
 
 export interface SearchResultsProps {

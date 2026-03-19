@@ -306,12 +306,10 @@ class DatabaseManager {
         }
 
         // Determine size: use folder computed size, or file size
-        let size: number | null = null;
-        if (item.itype === ItemType.FOLDER) {
-          size = folderSizes.get(item.id) || 0;
-        } else {
-          size = fileInfo?.size ?? null;
-        }
+        const size =
+          item.itype === ItemType.FOLDER
+            ? folderSizes.get(item.id) || 0
+            : fileInfo?.size ?? null;
 
         // Apply min file size filter for folders
         if (

@@ -1,14 +1,13 @@
 // Load environment variables from .env file (no-op if file doesn't exist)
-import 'dotenv/config';
-
-import express from 'express';
 import cors from 'cors';
-import apiRoutes from './routes/index.js';
+import express from 'express';
 import { getConfig, validateConfig } from './config.js';
 import { initDatabase } from './db/database.js';
-import { scheduleHourlyRefresh, startWatching } from './services/refresh.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { createStaticMiddleware } from './middleware/static.js';
+import apiRoutes from './routes/index.js';
+import { scheduleHourlyRefresh, startWatching } from './services/refresh.js';
+import 'dotenv/config';
 
 const app = express();
 const config = getConfig();

@@ -1,5 +1,5 @@
-import type { SearchResultItem } from '../types/api';
-import { formatFileSize, formatDate, highlightTerms } from '../utils/format';
+import { type SearchResultItem } from '~/types/api';
+import { formatDate, formatFileSize, highlightTerms } from '~/utils/format';
 
 export interface ResultItemProps {
   item: SearchResultItem;

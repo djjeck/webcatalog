@@ -4,10 +4,10 @@
  */
 
 import { getDatabase } from '../db/database.js';
-import { buildSearchQuery, buildRandomQuery } from '../db/queries.js';
-import { checkAndReloadIfChanged } from './refresh.js';
-import type { SearchResultItem, SearchResponse } from '../types/api.js';
+import { buildRandomQuery, buildSearchQuery } from '../db/queries.js';
+import { type SearchResponse, type SearchResultItem } from '../types/api.js';
 import { ItemType } from '../types/database.js';
+import { checkAndReloadIfChanged } from './refresh.js';
 
 /**
  * Raw database row from search query

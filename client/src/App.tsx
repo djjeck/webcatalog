@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { EmptyState } from './components/EmptyState';
 import { SearchBar } from './components/SearchBar';
 import { SearchResults } from './components/SearchResults';
 import { StatusBar } from './components/StatusBar';
-import { EmptyState } from './components/EmptyState';
-import { search, randomResult, getDbStatus, ApiError } from './services/api';
-import type { DbStatusResponse, SearchResultItem } from './types/api';
+import { ApiError, getDbStatus, randomResult, search } from './services/api';
+import { type DbStatusResponse, type SearchResultItem } from './types/api';
 import './App.css';
 
 type AppState = 'initial' | 'loading' | 'results' | 'no-results' | 'error';

@@ -3,10 +3,10 @@
  */
 
 import { Router } from 'express';
-import healthRouter from './health.js';
-import searchRouter from './search.js';
 import dbStatusRouter from './db-status.js';
+import healthRouter from './health.js';
 import randomRouter from './random.js';
+import searchRouter from './search.js';
 
 const router = Router();
 

@@ -4,13 +4,12 @@
  * Queries the in-memory search_index table for statistics.
  */
 
-import { Router } from 'express';
-import type { Response } from 'express';
+import { type Response, Router } from 'express';
 import { stat } from 'fs/promises';
 import { getDatabase } from '../db/database.js';
-import { getLastReloadTime } from '../services/refresh.js';
-import type { DbStatusResponse } from '../types/api.js';
 import { asyncHandler } from '../middleware/errors.js';
+import { getLastReloadTime } from '../services/refresh.js';
+import { type DbStatusResponse } from '../types/api.js';
 import { ItemType } from '../types/database.js';
 
 const router = Router();

@@ -1,9 +1,15 @@
-import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+import { defineConfig } from 'vitest/config';
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '~': resolve(__dirname, 'src'),
+    },
+  },
   server: {
     proxy: {
       // Dev proxy to backend server (not used in production builds)

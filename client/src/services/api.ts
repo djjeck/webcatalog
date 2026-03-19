@@ -3,13 +3,13 @@
  * Provides typed methods for all API endpoints
  */
 
-import type {
-  SearchResponse,
-  SearchResultItem,
-  DbStatusResponse,
-  HealthResponse,
-  ErrorResponse,
-} from '../types/api';
+import {
+  type DbStatusResponse,
+  type ErrorResponse,
+  type HealthResponse,
+  type SearchResponse,
+  type SearchResultItem,
+} from '~/types/api';
 
 /**
  * Search parameters for the client API

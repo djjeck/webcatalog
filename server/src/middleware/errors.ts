@@ -2,8 +2,8 @@
  * Error handling middleware and custom error classes
  */
 
-import type { Request, Response, NextFunction } from 'express';
-import type { ErrorResponse } from '../types/api.js';
+import { type NextFunction, type Request, type Response } from 'express';
+import { type ErrorResponse } from '../types/api.js';
 
 /**
  * Base class for application errors with HTTP status code

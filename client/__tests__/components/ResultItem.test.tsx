@@ -229,4 +229,57 @@ describe('highlightTerms', () => {
     const result = highlightTerms('test (pattern)', ['(pattern)']);
     expect(result).toBeDefined();
   });
+
+  it('should return plain text when term does not match', () => {
+    const result = highlightTerms('hello world', ['xyz']);
+    expect(result).toBe('hello world');
+  });
+
+  it('should highlight diacritic-folded match: cafe matches café', () => {
+    const result = highlightTerms('café', ['cafe']) as React.ReactNode[];
+    expect(Array.isArray(result)).toBe(true);
+    // The mark element should contain the original accented text
+    const marked = result.find(
+      (node) =>
+        typeof node === 'object' &&
+        node !== null &&
+        'props' in node &&
+        (node as { props: { className?: string } }).props.className ===
+          'search-highlight'
+    ) as { props: { children: string } } | undefined;
+    expect(marked).toBeDefined();
+    expect(marked?.props.children).toBe('café');
+  });
+
+  it('should highlight sharp-s folded match: strasse matches Straße', () => {
+    const result = highlightTerms('Straße', ['strasse']) as React.ReactNode[];
+    expect(Array.isArray(result)).toBe(true);
+    const marked = result.find(
+      (node) =>
+        typeof node === 'object' &&
+        node !== null &&
+        'props' in node &&
+        (node as { props: { className?: string } }).props.className ===
+          'search-highlight'
+    ) as { props: { children: string } } | undefined;
+    expect(marked).toBeDefined();
+    expect(marked?.props.children).toBe('Straße');
+  });
+
+  it('should highlight folded match mid-string', () => {
+    const result = highlightTerms(
+      'path/to/Straße/file',
+      ['strasse']
+    ) as React.ReactNode[];
+    expect(Array.isArray(result)).toBe(true);
+    const marked = result.find(
+      (node) =>
+        typeof node === 'object' &&
+        node !== null &&
+        'props' in node &&
+        (node as { props: { className?: string } }).props.className ===
+          'search-highlight'
+    ) as { props: { children: string } } | undefined;
+    expect(marked?.props.children).toBe('Straße');
+  });
 });

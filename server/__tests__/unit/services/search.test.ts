@@ -276,6 +276,7 @@ describe('executeSearch', () => {
     expect(result.results[0].name).toBe('test.txt');
     expect(result.totalResults).toBe(1);
     expect(result.executionTime).toBeGreaterThanOrEqual(0);
+    expect(buildSearchQuery).toHaveBeenCalledWith('test');
   });
 
   it('should check for database reload before search', async () => {
@@ -448,6 +449,7 @@ describe('getSearchCount', () => {
 
     await getSearchCount('test');
 
+    expect(buildSearchQuery).toHaveBeenCalledWith('test');
     expect(mockStatement.get).toHaveBeenCalledWith('%test%');
   });
 });

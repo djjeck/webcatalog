@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '../../src/index.js';
+import { withExpectedConsoleError } from '../utils/console.js';
 
 // Mock fs/promises
 vi.mock('fs/promises', () => ({
@@ -123,48 +124,72 @@ describe('GET /api/db-status', () => {
   });
 
   it('should return 500 when database is not initialized', async () => {
-    vi.mocked(getDatabase).mockImplementation(() => {
-      throw new Error('Database not initialized. Call initDatabase() first.');
+    await withExpectedConsoleError(async (consoleErrorSpy) => {
+      vi.mocked(getDatabase).mockImplementation(() => {
+        throw new Error('Database not initialized. Call initDatabase() first.');
+      });
+
+      const response = await request(app).get('/api/db-status');
+
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error', 'Internal Server Error');
+      expect(response.body.message).toContain('Database not initialized');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unexpected error:',
+        expect.any(Error)
+      );
     });
-
-    const response = await request(app).get('/api/db-status');
-
-    expect(response.status).toBe(500);
-    expect(response.body).toHaveProperty('error', 'Internal Server Error');
-    expect(response.body.message).toContain('Database not initialized');
   });
 
   it('should return 500 when file stat fails', async () => {
-    vi.mocked(stat).mockRejectedValue(new Error('File not found'));
+    await withExpectedConsoleError(async (consoleErrorSpy) => {
+      vi.mocked(stat).mockRejectedValue(new Error('File not found'));
 
-    const response = await request(app).get('/api/db-status');
+      const response = await request(app).get('/api/db-status');
 
-    expect(response.status).toBe(500);
-    expect(response.body).toHaveProperty('error', 'Internal Server Error');
-    expect(response.body.message).toContain('File not found');
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error', 'Internal Server Error');
+      expect(response.body.message).toContain('File not found');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unexpected error:',
+        expect.any(Error)
+      );
+    });
   });
 
   it('should return 500 when database query fails', async () => {
-    mockDb.prepare.mockImplementation(() => {
-      throw new Error('Database query failed');
+    await withExpectedConsoleError(async (consoleErrorSpy) => {
+      mockDb.prepare.mockImplementation(() => {
+        throw new Error('Database query failed');
+      });
+
+      const response = await request(app).get('/api/db-status');
+
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error', 'Internal Server Error');
+      expect(response.body.message).toContain('Database query failed');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unexpected error:',
+        expect.any(Error)
+      );
     });
-
-    const response = await request(app).get('/api/db-status');
-
-    expect(response.status).toBe(500);
-    expect(response.body).toHaveProperty('error', 'Internal Server Error');
-    expect(response.body.message).toContain('Database query failed');
   });
 
   it('should handle non-Error exceptions', async () => {
-    vi.mocked(getDatabase).mockImplementation(() => {
-      throw 'Unknown error';
+    await withExpectedConsoleError(async (consoleErrorSpy) => {
+      vi.mocked(getDatabase).mockImplementation(() => {
+        throw 'Unknown error';
+      });
+
+      const response = await request(app).get('/api/db-status');
+
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error', 'Internal Server Error');
+      expect(response.body.message).toContain('An unexpected error occurred');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unexpected error:',
+        'Unknown error'
+      );
     });
-
-    const response = await request(app).get('/api/db-status');
-
-    expect(response.status).toBe(500);
-    expect(response.body).toHaveProperty('error', 'Internal Server Error');
-    expect(response.body.message).toContain('An unexpected error occurred');
   });
 });

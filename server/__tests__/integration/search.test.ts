@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '../../src/index.js';
+import { withExpectedConsoleError } from '../utils/console.js';
 
 // Mock the search service
 vi.mock('../../src/services/search.js', () => ({
@@ -136,24 +137,36 @@ describe('GET /api/search', () => {
   });
 
   it('should return 500 when search service throws error', async () => {
-    vi.mocked(executeSearch).mockRejectedValue(new Error('Database error'));
+    await withExpectedConsoleError(async (consoleErrorSpy) => {
+      vi.mocked(executeSearch).mockRejectedValue(new Error('Database error'));
 
-    const response = await request(app).get('/api/search?q=test');
+      const response = await request(app).get('/api/search?q=test');
 
-    expect(response.status).toBe(500);
-    expect(response.body).toHaveProperty('error', 'Internal Server Error');
-    expect(response.body).toHaveProperty('message', 'Database error');
-    expect(response.body).toHaveProperty('statusCode', 500);
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error', 'Internal Server Error');
+      expect(response.body).toHaveProperty('message', 'Database error');
+      expect(response.body).toHaveProperty('statusCode', 500);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unexpected error:',
+        expect.any(Error)
+      );
+    });
   });
 
   it('should handle non-Error exceptions', async () => {
-    vi.mocked(executeSearch).mockRejectedValue('Unknown error');
+    await withExpectedConsoleError(async (consoleErrorSpy) => {
+      vi.mocked(executeSearch).mockRejectedValue('Unknown error');
 
-    const response = await request(app).get('/api/search?q=test');
+      const response = await request(app).get('/api/search?q=test');
 
-    expect(response.status).toBe(500);
-    expect(response.body).toHaveProperty('error', 'Internal Server Error');
-    expect(response.body.message).toContain('unexpected error');
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error', 'Internal Server Error');
+      expect(response.body.message).toContain('unexpected error');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unexpected error:',
+        'Unknown error'
+      );
+    });
   });
 
   it('should handle quoted phrases in query', async () => {
@@ -224,13 +237,19 @@ describe('GET /api/random', () => {
   });
 
   it('should return 500 when service throws error', async () => {
-    vi.mocked(executeRandom).mockRejectedValue(
-      new Error('No items in the database')
-    );
+    await withExpectedConsoleError(async (consoleErrorSpy) => {
+      vi.mocked(executeRandom).mockRejectedValue(
+        new Error('No items in the database')
+      );
 
-    const response = await request(app).get('/api/random');
+      const response = await request(app).get('/api/random');
 
-    expect(response.status).toBe(500);
-    expect(response.body).toHaveProperty('error', 'Internal Server Error');
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error', 'Internal Server Error');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unexpected error:',
+        expect.any(Error)
+      );
+    });
   });
 });

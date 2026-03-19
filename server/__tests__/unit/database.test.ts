@@ -6,6 +6,7 @@ import {
   getDatabase,
   closeDatabase,
 } from '../../src/db/database.js';
+import { withExpectedConsoleError } from '../utils/console.js';
 
 // Mock fs/promises
 vi.mock('fs/promises', () => ({
@@ -162,10 +163,16 @@ describe('Database Manager', () => {
     it('should return false on error checking file stats', async () => {
       await initDatabase(mockDbPath, []);
 
-      vi.mocked(stat).mockRejectedValue(new Error('File not found'));
+      await withExpectedConsoleError(async (consoleErrorSpy) => {
+        vi.mocked(stat).mockRejectedValue(new Error('File not found'));
 
-      const changed = await getDatabase().hasFileChanged();
-      expect(changed).toBe(false);
+        const changed = await getDatabase().hasFileChanged();
+        expect(changed).toBe(false);
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Error checking file modification time:',
+          expect.any(Error)
+        );
+      });
     });
   });
 

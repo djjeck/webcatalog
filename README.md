@@ -86,7 +86,7 @@ docker run -d \
 - **Exact phrase**: `"summer vacation"` - Finds exact phrase
 - **Mixed**: `vacation "summer 2024" photos` - Combines phrase and individual terms
 
-All searches are case-insensitive and match partial words.
+All searches are case-insensitive, diacritic-insensitive, and use letter folding while still matching partial words. Accented and unaccented variants match each other (for example `cafe` matches `café`, `café` matches `cafe`, `weiss` matches `weiß`, and `weiß` matches `weiss`).
 
 ## Configuration
 

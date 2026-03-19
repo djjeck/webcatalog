@@ -18,6 +18,7 @@ import { buildSearchQuery } from '../../src/db/queries.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEST_DB_PATH = join(__dirname, '../utils/test tree.w3cat');
+const DIACRITIC_TEST_ID_BASE = 987654300;
 
 interface RawSearchRow {
   id: number;
@@ -39,6 +40,42 @@ function executeTestSearch(
   const { sql, params } = buildSearchQuery(query);
   const stmt = db.prepare(sql);
   return stmt.all(...params) as RawSearchRow[];
+}
+
+function insertDiacriticFixture(
+  id: number,
+  name: string,
+  nameFolded: string
+): void {
+  const db = getDatabase().getDb();
+  db.prepare(
+    `INSERT INTO search_index (
+      id,
+      name,
+      name_folded,
+      itype,
+      size,
+      date_modified,
+      date_created,
+      full_path,
+      volume_name
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    id,
+    name,
+    nameFolded,
+    1,
+    1234,
+    null,
+    null,
+    '/special_chars/' + name,
+    'root_1'
+  );
+}
+
+function removeDiacriticFixture(): void {
+  const db = getDatabase().getDb();
+  db.prepare('DELETE FROM search_index WHERE id >= ?').run(DIACRITIC_TEST_ID_BASE);
 }
 
 /**
@@ -377,6 +414,88 @@ describe('Search against real test database', () => {
       expect(results[0].full_path).toBe(
         '/case_sensitivity/Archive/report.pdf'
       );
+    });
+  });
+
+  describe('diacritic-insensitive search', () => {
+    afterEach(() => {
+      removeDiacriticFixture();
+    });
+
+    it('should match accented query to accented and unaccented filenames', () => {
+      insertDiacriticFixture(
+        DIACRITIC_TEST_ID_BASE + 1,
+        'café-symmetric.txt',
+        'cafe-symmetric.txt'
+      );
+      insertDiacriticFixture(
+        DIACRITIC_TEST_ID_BASE + 2,
+        'cafe-symmetric.txt',
+        'cafe-symmetric.txt'
+      );
+
+      const results = executeTestSearch('café');
+      const names = results.map((r) => r.file_name || r.name);
+
+      expect(names).toContain('café-symmetric.txt');
+      expect(names).toContain('cafe-symmetric.txt');
+    });
+
+    it('should match unaccented query to accented and unaccented filenames', () => {
+      insertDiacriticFixture(
+        DIACRITIC_TEST_ID_BASE + 1,
+        'café-symmetric.txt',
+        'cafe-symmetric.txt'
+      );
+      insertDiacriticFixture(
+        DIACRITIC_TEST_ID_BASE + 2,
+        'cafe-symmetric.txt',
+        'cafe-symmetric.txt'
+      );
+
+      const results = executeTestSearch('cafe');
+      const names = results.map((r) => r.file_name || r.name);
+
+      expect(names).toContain('café-symmetric.txt');
+      expect(names).toContain('cafe-symmetric.txt');
+    });
+
+    it('should match sharp-s query to sharp-s and folded filenames', () => {
+      insertDiacriticFixture(
+        DIACRITIC_TEST_ID_BASE + 3,
+        'weiß-symmetric.txt',
+        'weiss-symmetric.txt'
+      );
+      insertDiacriticFixture(
+        DIACRITIC_TEST_ID_BASE + 4,
+        'weiss-symmetric.txt',
+        'weiss-symmetric.txt'
+      );
+
+      const results = executeTestSearch('weiß');
+      const names = results.map((r) => r.file_name || r.name);
+
+      expect(names).toContain('weiß-symmetric.txt');
+      expect(names).toContain('weiss-symmetric.txt');
+    });
+
+    it('should match folded query to sharp-s and folded filenames', () => {
+      insertDiacriticFixture(
+        DIACRITIC_TEST_ID_BASE + 3,
+        'weiß-symmetric.txt',
+        'weiss-symmetric.txt'
+      );
+      insertDiacriticFixture(
+        DIACRITIC_TEST_ID_BASE + 4,
+        'weiss-symmetric.txt',
+        'weiss-symmetric.txt'
+      );
+
+      const results = executeTestSearch('weiss');
+      const names = results.map((r) => r.file_name || r.name);
+
+      expect(names).toContain('weiß-symmetric.txt');
+      expect(names).toContain('weiss-symmetric.txt');
     });
   });
 });

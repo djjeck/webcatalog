@@ -172,7 +172,7 @@ describe('buildSearchWhereClause', () => {
     const result = buildSearchWhereClause(terms);
 
     // New simplified query searches single name column with ESCAPE clause
-    expect(result.clause).toBe(`name LIKE ? ESCAPE '\\' COLLATE NOCASE`);
+    expect(result.clause).toBe(`name_folded LIKE ? ESCAPE '\\' COLLATE NOCASE`);
     expect(result.params).toEqual(['%vacation%']);
   });
 
@@ -184,7 +184,7 @@ describe('buildSearchWhereClause', () => {
     const result = buildSearchWhereClause(terms);
 
     expect(result.clause).toBe(
-      `name LIKE ? ESCAPE '\\' COLLATE NOCASE AND name LIKE ? ESCAPE '\\' COLLATE NOCASE`
+      `name_folded LIKE ? ESCAPE '\\' COLLATE NOCASE AND name_folded LIKE ? ESCAPE '\\' COLLATE NOCASE`
     );
     expect(result.params).toEqual(['%vacation%', '%photos%']);
   });
@@ -193,7 +193,7 @@ describe('buildSearchWhereClause', () => {
     const terms: SearchTerm[] = [{ value: 'summer vacation', isPhrase: true }];
     const result = buildSearchWhereClause(terms);
 
-    expect(result.clause).toBe(`name LIKE ? ESCAPE '\\' COLLATE NOCASE`);
+    expect(result.clause).toBe(`name_folded LIKE ? ESCAPE '\\' COLLATE NOCASE`);
     expect(result.params).toEqual(['%summer vacation%']);
   });
 
@@ -207,7 +207,7 @@ describe('buildSearchWhereClause', () => {
 
 describe('buildSearchQuery', () => {
   it('should build query against search_index table', () => {
-    const result = buildSearchQuery('vacation', []);
+    const result = buildSearchQuery('vacation');
 
     expect(result.sql).toContain('SELECT');
     expect(result.sql).toContain('FROM search_index');
@@ -217,20 +217,20 @@ describe('buildSearchQuery', () => {
   });
 
   it('should build query for multiple terms', () => {
-    const result = buildSearchQuery('vacation photos', []);
+    const result = buildSearchQuery('vacation photos');
 
     expect(result.sql).toContain('AND');
     expect(result.params).toEqual(['%vacation%', '%photos%']);
   });
 
   it('should build query for quoted phrase', () => {
-    const result = buildSearchQuery('"summer vacation"', []);
+    const result = buildSearchQuery('"summer vacation"');
 
     expect(result.params).toEqual(['%summer vacation%']);
   });
 
   it('should build query for mixed terms and phrases', () => {
-    const result = buildSearchQuery('vacation "summer 2024" photos', []);
+    const result = buildSearchQuery('vacation "summer 2024" photos');
 
     expect(result.params).toEqual([
       '%vacation%',
@@ -240,14 +240,14 @@ describe('buildSearchQuery', () => {
   });
 
   it('should build query with 1=1 for empty search', () => {
-    const result = buildSearchQuery('', []);
+    const result = buildSearchQuery('');
 
     expect(result.sql).toContain('WHERE 1=1');
     expect(result.params).toEqual([]);
   });
 
   it('should select all necessary columns from search_index', () => {
-    const result = buildSearchQuery('test', []);
+    const result = buildSearchQuery('test');
 
     // Columns from the flattened search_index table
     expect(result.sql).toContain('id');
@@ -269,7 +269,7 @@ describe('buildSearchQuery', () => {
     ];
 
     for (const input of maliciousInputs) {
-      const result = buildSearchQuery(input, []);
+      const result = buildSearchQuery(input);
 
       // Should be safely escaped in parameters
       expect(result.params.length).toBeGreaterThan(0);
@@ -283,12 +283,38 @@ describe('buildSearchQuery', () => {
     const edgeCases = ['   ', '""""', '" "', '   "   "   '];
 
     for (const input of edgeCases) {
-      const result = buildSearchQuery(input, []);
+      const result = buildSearchQuery(input);
 
       // Should handle gracefully without errors
       expect(result.sql).toBeDefined();
       expect(result.params).toBeDefined();
     }
+  });
+
+  it('should fold diacritics from terms', () => {
+    const result = buildSearchQuery('café');
+    expect(result.params).toEqual(['%cafe%']);
+  });
+
+  it('should normalize accented and unaccented variants to the same pattern', () => {
+    const accented = buildSearchQuery('café');
+    const unaccented = buildSearchQuery('cafe');
+
+    expect(accented.params).toEqual(unaccented.params);
+    expect(accented.params).toEqual(['%cafe%']);
+  });
+
+  it('should fold special letter variants from terms', () => {
+    const result = buildSearchQuery('weiß straße');
+    expect(result.params).toEqual(['%weiss%', '%strasse%']);
+  });
+
+  it('should normalize sharp-s and folded variants to the same pattern', () => {
+    const sharpS = buildSearchQuery('weiß');
+    const folded = buildSearchQuery('weiss');
+
+    expect(sharpS.params).toEqual(folded.params);
+    expect(sharpS.params).toEqual(['%weiss%']);
   });
 });
 

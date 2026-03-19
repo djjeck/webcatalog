@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { stat } from 'fs/promises';
 import { ItemType } from '../types/database.js';
+import { foldForSearch } from '../utils/search-fold.js';
 
 /**
  * Database manager for WinCatalog SQLite database
@@ -13,6 +14,11 @@ import { ItemType } from '../types/database.js';
  * Supports exclude patterns to filter out files during indexing:
  * - Filename patterns: "*.tmp", "Thumbs.db", ".*" (hidden files)
  * - Directory patterns: "@eaDir/", "node_modules/" (excludes directory and all contents)
+ *
+ * Search indexing:
+ * - Stores the original filename in `name` for display
+ * - Stores a normalized value in `name_folded` for matching
+ * - Normalization is always on (diacritics and special letter variants folded)
  *
  * Pattern format rules:
  * - Patterns without "/" match against filenames only
@@ -78,6 +84,7 @@ class DatabaseManager {
       CREATE TABLE search_index (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
+        name_folded TEXT NOT NULL,
         itype INTEGER NOT NULL,
         size INTEGER,
         date_modified TEXT,
@@ -245,8 +252,18 @@ class DatabaseManager {
 
     // Step 4: Filter and insert into search_index
     const insert = this.db.prepare(
-      `INSERT INTO search_index (id, name, itype, size, date_modified, date_created, full_path, volume_name)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO search_index (
+        id,
+        name,
+        name_folded,
+        itype,
+        size,
+        date_modified,
+        date_created,
+        full_path,
+        volume_name
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
 
     const filenameMatchers = filenamePatterns.map((p) => this.globToRegex(p));
@@ -256,6 +273,7 @@ class DatabaseManager {
       for (const item of items) {
         const fileInfo = fileInfoMap.get(item.id);
         const displayName = fileInfo?.name || item.name;
+        const foldedName = foldForSearch(displayName);
 
         // Apply filename exclude patterns
         if (filenameMatchers.some((re) => re.test(displayName))) {
@@ -307,6 +325,7 @@ class DatabaseManager {
         insert.run(
           item.id,
           displayName,
+          foldedName,
           item.itype,
           size,
           fileInfo?.date_change ?? null,
@@ -319,9 +338,9 @@ class DatabaseManager {
 
     insertAll();
 
-    // Create index on name for fast LIKE searches
+    // Search runs on the normalized column to provide accent-insensitive matching.
     this.db.exec(
-      'CREATE INDEX idx_search_name ON search_index(name COLLATE NOCASE)'
+      'CREATE INDEX idx_search_name_folded ON search_index(name_folded COLLATE NOCASE)'
     );
   }
 

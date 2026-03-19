@@ -152,6 +152,11 @@ MIN_FILE_SIZE="100kb"
 MIN_FILE_SIZE="5MB"
 ```
 
+### Search Behavior
+
+Search is always case-insensitive and always applies accent/letter folding.
+Accented and unaccented variants match each other (for example `cafe` matches `café`, and `café` matches `cafe`; `weiss` matches `weiß`, and `weiß` matches `weiss`).
+
 ## Architecture
 
 ### Backend

@@ -5,6 +5,10 @@
  * - Case-insensitive matching
  * - Diacritic-insensitive matching (cafe ~= café)
  * - Common transliteration compatibility (weiss ~= weiß, strasse ~= straße)
+ *
+ * SYNC NOTE: SPECIAL_FOLD_MAP and COMBINING_MARK_REGEX are duplicated in
+ * client/src/utils/format.tsx (used for highlight matching). Any change here
+ * must be applied there too, and vice versa.
  */
 
 const SPECIAL_FOLD_MAP: Record<string, string> = {

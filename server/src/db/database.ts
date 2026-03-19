@@ -309,7 +309,7 @@ class DatabaseManager {
         const size =
           item.itype === ItemType.FOLDER
             ? folderSizes.get(item.id) || 0
-            : fileInfo?.size ?? null;
+            : (fileInfo?.size ?? null);
 
         // Apply min file size filter for folders
         if (

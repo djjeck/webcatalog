@@ -29,6 +29,11 @@ const mockSearch = vi.mocked(api.search);
 const mockRandomResult = vi.mocked(api.randomResult);
 const mockGetDbStatus = vi.mocked(api.getDbStatus);
 
+async function renderApp(): Promise<void> {
+  render(<App />);
+  await screen.findByText('Connected');
+}
+
 describe('App', () => {
   const mockDbStatus: DbStatusResponse = {
     connected: true,
@@ -81,7 +86,7 @@ describe('App', () => {
 
   describe('initial render', () => {
     it('should render app layout with components', async () => {
-      render(<App />);
+      await renderApp();
 
       // Verify components are composed (detailed rendering tested in component unit tests)
       expect(screen.getByPlaceholderText('Search files and folders...')).toBeInTheDocument();
@@ -89,11 +94,7 @@ describe('App', () => {
     });
 
     it('should fetch and display database status on mount', async () => {
-      render(<App />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Connected')).toBeInTheDocument();
-      });
+      await renderApp();
 
       expect(mockGetDbStatus).toHaveBeenCalledTimes(1);
     });
@@ -105,12 +106,7 @@ describe('App', () => {
       mockSearch.mockImplementation(() => new Promise(() => {}));
 
       const user = userEvent.setup();
-      render(<App />);
-
-      // Wait for db status to load first
-      await waitFor(() => {
-        expect(screen.getByText('Connected')).toBeInTheDocument();
-      });
+      await renderApp();
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
@@ -125,7 +121,7 @@ describe('App', () => {
       mockSearch.mockResolvedValue(mockSearchResponse);
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation photos');
@@ -150,7 +146,7 @@ describe('App', () => {
       });
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'nonexistent');
@@ -164,7 +160,7 @@ describe('App', () => {
       mockSearch.mockResolvedValue(mockSearchResponse);
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
@@ -190,7 +186,7 @@ describe('App', () => {
       );
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
@@ -208,7 +204,7 @@ describe('App', () => {
       mockSearch.mockRejectedValue(new Error('Network error'));
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       const input = screen.getByPlaceholderText('Search files and folders...');
       await user.type(input, 'vacation');
@@ -244,7 +240,7 @@ describe('App', () => {
       mockSearch.mockResolvedValue(mockSearchResponse);
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       // Initial state
       expect(screen.getByText('Search Your Catalog')).toBeInTheDocument();
@@ -273,7 +269,7 @@ describe('App', () => {
         });
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       // First search
       const input = screen.getByPlaceholderText('Search files and folders...');
@@ -298,7 +294,7 @@ describe('App', () => {
         .mockResolvedValueOnce(mockSearchResponse);
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       // First search fails
       const input = screen.getByPlaceholderText('Search files and folders...');
@@ -330,8 +326,8 @@ describe('App', () => {
       volumeName: 'Drive1',
     };
 
-    it('should render the random button', () => {
-      render(<App />);
+    it('should render the random button', async () => {
+      await renderApp();
       expect(
         screen.getByRole('button', { name: 'Get a random result' })
       ).toBeInTheDocument();
@@ -341,7 +337,7 @@ describe('App', () => {
       mockRandomResult.mockResolvedValue(mockRandomItem);
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       const button = screen.getByRole('button', {
         name: 'Get a random result',
@@ -359,7 +355,7 @@ describe('App', () => {
       mockRandomResult.mockRejectedValue(new Error('Database error'));
 
       const user = userEvent.setup();
-      render(<App />);
+      await renderApp();
 
       const button = screen.getByRole('button', {
         name: 'Get a random result',

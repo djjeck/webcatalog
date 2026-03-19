@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-03-19
+
+### Added
+
+- Search without diacritics (e.g. accent-insensitive search)
+
+### Changed
+
+- `validate` npm script for running full quality checks in one command
+- Auto-publish Docker `dev` tag on push
+- npm dependency upgrades
+- TypeScript import normalization
+
 ## [1.0.0] - 2026-02-02
 
 ### Added

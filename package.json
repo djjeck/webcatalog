@@ -30,7 +30,7 @@
   "author": "",
   "license": "GPL-3.0-only",
   "devDependencies": {
-    "@playwright/test": "^1.58.1",
+    "@playwright/test": "^1.59.1",
     "concurrently": "^9.1.2"
   }
 }

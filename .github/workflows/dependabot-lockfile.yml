@@ -1,0 +1,42 @@
+name: Fix Dependabot Lock File
+
+on:
+  pull_request_target:
+    branches: [main]
+
+jobs:
+  fix-lockfile:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Regenerate lock files
+        run: |
+          npm install --package-lock-only
+          (cd client && npm install --package-lock-only)
+          (cd server && npm install --package-lock-only)
+
+      - name: Commit updated lock files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json client/package-lock.json server/package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lock files already in sync, nothing to commit."
+          else
+            git commit -m "chore: update package-lock.json for dependabot bump"
+            git push
+          fi

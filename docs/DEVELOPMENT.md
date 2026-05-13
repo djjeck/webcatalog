@@ -108,6 +108,33 @@ All checks run automatically and must pass before committing.
 - `GET /api/search?q=<query>` - Search catalog
 - `GET /api/db-status` - Database status and statistics
 
+## MCP Endpoint
+
+WebCatalog exposes a [Model Context Protocol](https://modelcontextprotocol.io/) endpoint at `POST /mcp`, allowing AI agents to search the catalog directly.
+
+The endpoint uses the **Streamable HTTP** MCP transport (stateless — one transport per request, no session persistence).
+
+### Connecting
+
+Point your MCP client at `http://<host>:<port>/mcp`.
+
+Required request headers:
+
+```
+Content-Type: application/json
+Accept: application/json, text/event-stream
+```
+
+### Available Tool: `search`
+
+| Parameter | Type   | Required | Description                                      |
+| --------- | ------ | -------- | ------------------------------------------------ |
+| `query`   | string | Yes      | Search query (same syntax as the web UI)         |
+| `limit`   | number | No       | Max results to return (default: 100, max: 1000)  |
+| `offset`  | number | No       | Results to skip for pagination (default: 0)      |
+
+The tool returns a JSON-serialised [`SearchResponse`](../server/src/types/api.ts) object.
+
 ## Environment Variables
 
 | Variable           | Description                             | Default                          |

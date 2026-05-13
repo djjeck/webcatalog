@@ -40,12 +40,12 @@ Add a Model Context Protocol (MCP) server endpoint to the existing Express app, 
 
 #### Sub-tasks
 
-- [ ] **8.1** Add `@modelcontextprotocol/sdk` dependency to `server/package.json`
-- [ ] **8.2** Create `server/src/mcp/server.ts` — builds an `McpServer` with a `search` tool backed by `executeSearch`
-- [ ] **8.3** Create `server/src/routes/mcp.ts` — stateless Streamable HTTP Express router at `/mcp`
-- [ ] **8.4** Register the MCP router in `server/src/index.ts`
-- [ ] **8.5** Add unit tests for the MCP server (`__tests__/mcp/server.test.ts`) and integration tests for the route (`__tests__/routes/mcp.test.ts`)
-- [ ] **8.6** Update `docs/DEVELOPMENT.md` and `README.md` with MCP endpoint documentation
+- [x] **8.1** Add `@modelcontextprotocol/sdk` dependency to `server/package.json`
+- [x] **8.2** Create `server/src/mcp/server.ts` — builds an `McpServer` with a `search` tool backed by `executeSearch`
+- [x] **8.3** Create `server/src/routes/mcp.ts` — stateless Streamable HTTP Express router at `/mcp`
+- [x] **8.4** Register the MCP router in `server/src/index.ts`
+- [x] **8.5** Add unit tests for the MCP server (`__tests__/unit/mcp/server.test.ts`) and integration tests for the route (`__tests__/integration/mcp.test.ts`)
+- [x] **8.6** Update `docs/DEVELOPMENT.md` and `README.md` with MCP endpoint documentation
 
 #### Acceptance Criteria
 

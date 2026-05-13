@@ -25,6 +25,7 @@
   "author": "",
   "license": "GPL-3.0-only",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",

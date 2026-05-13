@@ -6,6 +6,7 @@ import { initDatabase } from './db/database.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { createStaticMiddleware } from './middleware/static.js';
 import apiRoutes from './routes/index.js';
+import mcpRouter from './routes/mcp.js';
 import { scheduleHourlyRefresh, startWatching } from './services/refresh.js';
 import 'dotenv/config';
 
@@ -18,6 +19,9 @@ app.use(express.json());
 
 // API routes
 app.use('/api', apiRoutes);
+
+// MCP endpoint
+app.use('/mcp', mcpRouter);
 
 // Static file serving (in production or when explicitly enabled)
 if (config.serveStatic) {

@@ -19,6 +19,7 @@ Load a .w3cat file and WebCatalog will let you search its contents to determine 
 - **Auto-refresh** Automatically detects when the .w3cat file is modified and reloads its contents
 - **Pattern and size filtering** Exclude specific patterns or file types and set a minimum file size to filter results
 - **"I feel lucky" search** Click the slot-machine icon to perform a random search query
+- **MCP endpoint** AI agents can search the catalog via a [Model Context Protocol](https://modelcontextprotocol.io/) endpoint at `POST /mcp`
 
 ## Quick Start
 

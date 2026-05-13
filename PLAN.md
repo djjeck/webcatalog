@@ -33,3 +33,24 @@ Configured Docker buildx for AMD64 and ARM64 multi-arch builds, optimized the im
 ### Phase 7: Documentation & Deployment ✅
 
 Wrote comprehensive README, Docker deployment guide, Synology NAS guide, user guide, developer guide, and GitHub Actions publish workflow; published v1.0.0 to Docker Hub.
+
+### Phase 8: MCP Endpoint 🔄
+
+Add a Model Context Protocol (MCP) server endpoint to the existing Express app, allowing AI agents to search the WinCatalog database via the standard MCP tool-calling protocol.
+
+#### Sub-tasks
+
+- [ ] **8.1** Add `@modelcontextprotocol/sdk` dependency to `server/package.json`
+- [ ] **8.2** Create `server/src/mcp/server.ts` — builds an `McpServer` with a `search` tool backed by `executeSearch`
+- [ ] **8.3** Create `server/src/routes/mcp.ts` — stateless Streamable HTTP Express router at `/mcp`
+- [ ] **8.4** Register the MCP router in `server/src/index.ts`
+- [ ] **8.5** Add unit tests for the MCP server (`__tests__/mcp/server.test.ts`) and integration tests for the route (`__tests__/routes/mcp.test.ts`)
+- [ ] **8.6** Update `docs/DEVELOPMENT.md` and `README.md` with MCP endpoint documentation
+
+#### Acceptance Criteria
+
+- `POST /mcp` handles MCP initialize and tool-call requests
+- `GET /mcp` returns 405 (stateless — no SSE streaming)
+- `DELETE /mcp` returns 405 (stateless — no session management)
+- A `search` tool is exposed with `query`, `limit`, and `offset` parameters
+- 100% test coverage maintained

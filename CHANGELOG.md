@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-13
+
+### Added
+
+- MCP endpoint at `POST /mcp` — AI agents can search the catalog via the [Model Context Protocol](https://modelcontextprotocol.io/) using a stateless Streamable HTTP transport
+
+## [1.0.2] - 2026-05-04
+
+### Changed
+
+- Dependency version upgrades
+
 ## [1.0.1] - 2026-03-19
 
 ### Added

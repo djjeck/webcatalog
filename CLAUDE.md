@@ -16,17 +16,12 @@ This project offers a simple web-based UI that reads the SQLite save-file DB, an
 
 ### Implementation workflow
 
-1. **Follow the plan:** All implementation work follows [PLAN.md](PLAN.md), which contains a detailed task breakdown organized into phases.
-2. **One sub-task at a time:** Work on ONE sub-task from PLAN.md at a time (e.g., 1.1, 1.2, etc.), completing it fully before moving to the next. Wait for author review between sub-tasks.
-3. **Read documentation first:** Before reading source files, read the relevant documentation. Key docs:
+1. **Read documentation first:** Before reading source files, read the relevant documentation. Key docs:
    - [README.md](README.md) — features and deployment guide
    - [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) — WinCatalog SQLite schema
-   - [docs/DEVELOPER.md](docs/DEVELOPER.md) — architecture, testing, contributing
-4. **Mark progress:** Update PLAN.md to mark tasks as:
-   - ⬜ Not started
-   - 🔄 In progress
-   - ✅ Completed
-5. **Run tools:** At the end of each coding step, execute the following commands in order to validate edits and ensure code quality:
+   - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — architecture, testing, contributing
+2. **Work from GitHub issues:** All implementation work is driven by GitHub issues. Read the issue carefully before starting.
+3. **Run tools:** At the end of each coding step, execute the following commands in order to validate edits and ensure code quality:
 
    ```bash
    # Load Node environment (required for all npm commands)
@@ -49,7 +44,6 @@ This project offers a simple web-based UI that reads the SQLite save-file DB, an
 
    **Note:** The GitHub Actions CI workflow runs these same checks. If they pass locally, they should pass in CI.
 
-6. **Update documentation:** Before marking a phase complete, update the relevant documentation files (README.md, docs/) to reflect any changed behavior.
-7. **Review before proceeding:** After completing each sub-task, STOP and wait for author review before starting the next sub-task. Do not proceed to the next sub-task without explicit approval.
-8. **Compact completed phases:** When all sub-tasks in a phase are complete and the phase is marked `✅`, replace the full phase section in PLAN.md with a single compact entry: the phase heading, status `✅`, and a one-sentence summary of what was delivered. Remove the sub-task details, task checklists, and acceptance criteria. The full record is in git history.
-9. **Adapt the plan:** If implementation reveals new requirements or better approaches, update PLAN.md accordingly before proceeding.
+4. **Update the changelog:** Add user-visible changes to the `[Unreleased]` section of [CHANGELOG.md](CHANGELOG.md). Only include changes that are meaningful to end users (new features, behavior changes, bug fixes) — omit dependency upgrades, test improvements, and internal refactors.
+5. **Update documentation:** Update the relevant documentation files (README.md, docs/) to reflect any changed behavior.
+6. **Review before proceeding:** After completing the work, STOP and wait for author review before starting anything else.

@@ -42,7 +42,7 @@
     "@types/supertest": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.6",
     "eslint": "^10.4.0",
-    "eslint-import-resolver-node": "^0.3.9",
+    "eslint-import-resolver-node": "^0.4.0",
     "eslint-plugin-import-x": "^4.16.2",
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "eslint-plugin-unused-imports": "^4.4.1",
